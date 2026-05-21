@@ -54,8 +54,15 @@ Same knowledge layer as Phase 1. No RAG yet. API route working before UI is buil
 **Git**
 - Never run `git init` — this repo already exists with a commit history
 - Always branch from main: `git checkout -b feat/your-task-name`
-- Commit after every meaningful unit of work
-- Update PROGRESS.md before ending a session
+- Do not run git commands autonomously — user handles all git operations in PowerShell
+- Print file contents for the user to copy manually into the Windows repo
+
+**Environment**
+- Claude Code runs in WSL Linux — the Windows repo is at
+  `C:\Users\bieri\Documents\GitHub\spia-murp-advisor`
+- These are separate filesystems — files written in WSL are not visible in the Windows repo
+- Never attempt to write files directly to the repo or run git operations
+- Always print file contents so the user can copy them manually into the correct Windows path
 
 **Security**
 - `ANTHROPIC_API_KEY` goes in `.env.local` ONLY — never in any client-side file
