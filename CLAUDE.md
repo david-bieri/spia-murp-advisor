@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # SPIA Bot — Claude Code Session Context
 
 This file is loaded automatically at the start of every Claude Code session.
@@ -114,3 +115,6 @@ Commit after every meaningful unit of work. Update PROGRESS.md before ending a s
 Update the **Current Phase** section when a phase milestone is reached.
 Everything else is stable across phases — do not expand this file with content
 that belongs in README.md, DECISIONS.md, or PROGRESS.md.
+=======
+@AGENTS.md
+>>>>>>> claude/spia-murp-advisor-setup-N8EVH
