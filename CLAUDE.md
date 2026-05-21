@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # SPIA Bot — Claude Code Session Context
 
 This file is loaded automatically at the start of every Claude Code session.
@@ -43,13 +42,20 @@ Same knowledge layer as Phase 1. No RAG yet. API route working before UI is buil
 ## Stack
 
 - Next.js (App Router) · TypeScript · Tailwind CSS
-- Anthropic SDK · model: `claude-sonnet-4-20250514`
+- Anthropic SDK · model: `claude-sonnet-4-6`
 - Vercel deployment (GitHub-linked, auto-deploy on push to `main`)
 - Node.js 18+
+- Directory layout: `src/` (Next.js default — all app code under `src/`)
 
 ---
 
 ## Non-Negotiable Rules
+
+**Git**
+- Never run `git init` — this repo already exists with a commit history
+- Always branch from main: `git checkout -b feat/your-task-name`
+- Commit after every meaningful unit of work
+- Update PROGRESS.md before ending a session
 
 **Security**
 - `ANTHROPIC_API_KEY` goes in `.env.local` ONLY — never in any client-side file
@@ -88,13 +94,16 @@ Same knowledge layer as Phase 1. No RAG yet. API route working before UI is buil
 ## Knowledge Layer Structure
 
 ```
-content/
+src/content/                      (confirm exact path with codebase)
 ├── spia_staff_contacts.md    Layer 1 — staff routing (who to contact for what)
 ├── murp_curriculum.md        Layer 2 — program structure, faculty, tuition
 ├── murp_electives.md         Layer 2b — curated cross-dept elective catalog
 ├── uap5174_bieri_s26.md      Layer 3 — Blacksburg syllabus (Bieri, Spring 2026)
 └── uap5174_cowell_s24.md     Layer 3 — Arlington syllabus (Cowell, Spring 2024)
 ```
+
+`lib/knowledge.ts` assembles these files into `getContext()`.
+`lib/systemPrompt.ts` handles system prompt assembly separately.
 
 ---
 
@@ -115,6 +124,3 @@ Commit after every meaningful unit of work. Update PROGRESS.md before ending a s
 Update the **Current Phase** section when a phase milestone is reached.
 Everything else is stable across phases — do not expand this file with content
 that belongs in README.md, DECISIONS.md, or PROGRESS.md.
-=======
-@AGENTS.md
->>>>>>> claude/spia-murp-advisor-setup-N8EVH
