@@ -8,6 +8,8 @@
 ## Phase 1 — Working Prototype
 *Goal: React artifact with clean two-layer architecture and full knowledge base*
 
+*This is a test line*
+
 ### Architecture
 - [x] Two-layer separation established (knowledge / chat)
 - [x] `getContext()` interface contract defined
