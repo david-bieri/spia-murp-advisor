@@ -102,10 +102,10 @@
 - [x] `@anthropic-ai/sdk` installed and in `package.json`
 
 ### Vercel Connection
-- [ ] Log in to vercel.com → Add New Project → Import from GitHub
-- [ ] Select `spia-murp-advisor` repo
-- [ ] Add `ANTHROPIC_API_KEY` in Vercel environment variables
-- [ ] Confirm auto-deploy on push to `main`
+- [x] Log in to vercel.com → Add New Project → Import from GitHub
+- [x] Select `spia-murp-advisor` repo
+- [x] Add `ANTHROPIC_API_KEY` in Vercel environment variables
+- [x] Confirm auto-deploy on push to `main`
 
 ### content/ Folder
 - [x] `src/content/spia_staff_contacts.md`
