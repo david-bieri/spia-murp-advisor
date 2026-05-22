@@ -459,3 +459,46 @@ Thumbs.db
 - lib/knowledge.ts becomes an assembler, not a content store
 - Phase 3 RAG ingestion script points to content/ with no migration needed
 - Content update workflow: edit markdown → commit → push → Vercel redeploys automatically
+
+---
+
+## ADR-017: src/ Directory Layout; claude-sonnet-4-6 as Model String
+
+**Date:** 2026-05-20
+**Status:** Accepted
+
+**Decision:**
+Project uses Next.js `src/` directory layout (all application code under `src/`). Model string is `claude-sonnet-4-6`, not `claude-sonnet-4-20250514`.
+
+**Rationale — src/ layout:**
+`create-next-app` scaffolded the project with `src/` layout, which is the current Next.js convention. Flattening to root-level layout at this stage would require touching every import path for no architectural gain. Accepted as-is; documentation updated to match.
+
+**Rationale — model string:**
+`claude-sonnet-4-6` is the correct Claude 4 family model string. `claude-sonnet-4-20250514` was a Claude 3.x era date-suffixed format carried over from earlier documentation. The running code is authoritative — documentation updated to match.
+
+**Consequences:**
+- File structure diagrams in README.md and CLAUDE.md reflect `src/` prefix
+- `content/` folder lives at `src/content/` — confirm exact path before populating
+- All future documentation uses `claude-sonnet-4-6` as the model string
+- When Claude Code encounters model references, use `claude-sonnet-4-6`
+
+---
+
+## ADR-018: Claude Code Runs in WSL — File Transfer Protocol
+
+**Date:** 2026-05-21
+**Status:** Accepted
+
+**Decision:**
+Claude Code Desktop App runs in a WSL Linux environment (`/home/user/`). The Windows repo lives at `C:\Users\bieri\Documents\GitHub\spia-murp-advisor`. These are separate filesystems. Claude Code must never write files directly to the repo or run git commands. The established protocol is: Claude Code prints file contents; David creates files manually in Windows via Notepad; David handles all git operations in PowerShell.
+
+**Background:**
+This was discovered during Phase 2 development when Claude Code reported creating files at `/home/user/spia-murp-advisor/src/lib/knowledge.ts` but those files were not present in the Windows repo. The same issue caused the earlier unrelated histories git problem — Claude Code ran `git init` in WSL, creating a separate commit history disconnected from the Windows GitHub repo.
+
+**Consequences:**
+- CLAUDE.md Non-Negotiable Rules section includes explicit WSL/Windows environment note
+- Every Claude Code session: Claude Code generates code, prints it, David creates files in Windows
+- No exceptions — even for "small" files or "quick" edits
+- git operations: PowerShell only
+- File creation: Notepad (or VS Code) in Windows only
+- This protocol adds manual steps but eliminates the filesystem confusion that caused multiple debugging sessions

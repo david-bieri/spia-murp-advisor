@@ -60,7 +60,7 @@
 - [ ] **OPEN:** Phase 1 v3: Combined three-layer bot (render timeout — code size issue; fix needed)
 
 ### Documentation
-- [x] DECISIONS.md — 16 ADRs recorded
+- [x] DECISIONS.md — 18 ADRs recorded
 - [x] README.md — project overview and architecture
 - [x] PROGRESS.md — this file
 
@@ -74,46 +74,59 @@
 ## Phase 2 — Hosted Web Application
 *Goal: Next.js app on Vercel with shareable URL; same knowledge layer as Phase 1*
 
-### GitHub Setup (do this first, before any code)
-- [ ] Create `spia-murp-advisor` repo on GitHub (private, empty — no auto README)
-- [ ] Clone repo locally: `git clone https://github.com/[username]/spia-murp-advisor`
-- [ ] Copy README.md, DECISIONS.md, PROGRESS.md, CLAUDE.md into cloned folder
-- [ ] First commit — docs only: `git commit -m "docs: initial project documentation and ADRs"`
-- [ ] Push: `git push`
+**Layout note:** Project uses `src/` directory layout — confirmed. Content folder is `src/content/`. (ADR-017)
 
-### Project Scaffold (inside cloned folder)
-- [ ] `npx create-next-app@latest . --typescript --tailwind --app` (the `.` scaffolds in place)
-- [ ] Create `.gitignore` **before** committing node_modules (see ADR-016 for content)
-- [ ] Create `.env.local` with `ANTHROPIC_API_KEY=` placeholder
-- [ ] Create `content/` folder with five placeholder markdown files
-- [ ] Second commit: `git commit -m "feat: Next.js scaffold with TypeScript and Tailwind"`
-- [ ] Push: `git push`
+**Environment note:** Claude Code runs in WSL Linux; Windows repo is at `C:\Users\bieri\Documents\GitHub\spia-murp-advisor`. These are separate filesystems. Claude Code prints file contents; David creates files manually in Windows via Notepad. (ADR-018 — see below)
+
+### GitHub Setup
+- [x] Create `spia-murp-advisor` repo on GitHub (private)
+- [x] Clone repo locally
+- [x] Copy README.md, DECISIONS.md, PROGRESS.md, CLAUDE.md into cloned folder
+- [x] First commit — docs only
+- [x] Push
+- [x] Resolved unrelated histories (WSL vs Windows git init conflict)
+- [x] Default branch set to `main` on GitHub
+- [x] `.gitignore` merge conflict resolved
+
+### Project Scaffold
+- [x] `npx create-next-app@latest` with TypeScript, Tailwind, App Router
+- [x] `.gitignore` in place and clean
+- [x] `.env.local` created with real `ANTHROPIC_API_KEY` (never committed)
+- [x] `content/` folder confirmed at `src/content/`
+- [x] Scaffold committed and pushed
+- [x] Node.js v24 installed on Windows
+- [x] PowerShell execution policy set to RemoteSigned
+- [x] `@anthropic-ai/sdk` installed and in `package.json`
 
 ### Vercel Connection
 - [ ] Log in to vercel.com → Add New Project → Import from GitHub
 - [ ] Select `spia-murp-advisor` repo
-- [ ] Add `ANTHROPIC_API_KEY` in Vercel environment variables (Settings → Environment Variables)
-- [ ] Confirm: push to `main` triggers automatic redeploy (no manual `vercel deploy` needed)
+- [ ] Add `ANTHROPIC_API_KEY` in Vercel environment variables
+- [ ] Confirm auto-deploy on push to `main`
 
-### content/ Folder — Populate Before Building
-- [ ] `content/spia_staff_contacts.md` — migrate from knowledge const
-- [ ] `content/murp_curriculum.md` — migrate from knowledge const
-- [ ] `content/murp_electives.md` — curated elective stub (from Course_Tracking.xlsx analysis)
-- [ ] `content/uap5174_bieri_s26.md` — migrate from knowledge const
-- [ ] `content/uap5174_cowell_s24.md` — migrate from knowledge const
-- [ ] Commit: `git commit -m "content: initial knowledge layer as markdown files"`
+### content/ Folder
+- [x] `src/content/spia_staff_contacts.md`
+- [x] `src/content/murp_curriculum.md`
+- [x] `src/content/murp_electives.md`
+- [x] `src/content/uap5174_bieri_s26.md`
+- [x] `src/content/uap5174_cowell_s24.md`
+- [x] Committed and pushed
 
 ### Server-Side API Route
-- [ ] Create `app/api/chat/route.ts`
-- [ ] Import and assemble content from `content/` files via `lib/knowledge.ts`
-- [ ] Move system prompt assembly to `lib/systemPrompt.ts`
-- [ ] Implement `getContext()` stub in `lib/knowledge.ts` (reads content/ files)
-- [ ] Implement conversation history handling (last 10 messages)
-- [ ] Add basic error handling
-- [ ] **Test with curl before touching the UI**
-- [ ] Commit: `git commit -m "feat: server-side API route and knowledge layer"`
+- [x] `src/app/api/chat/route.ts` created and in Windows repo
+- [x] JSON body validation (message shape + at least one user turn)
+- [x] Last 10 messages sent to `claude-sonnet-4-6` (1000 max tokens)
+- [x] `src/lib/systemPrompt.ts` created and in Windows repo
+- [x] `src/lib/knowledge.ts` reads all five `src/content/` files via `fs/promises`
+- [x] `getContext()` returns concatenated content with labeled separators
+- [x] Typed Anthropic error handling
+- [x] Real API key in `.env.local` — tested and working
+- [x] **All three curl tests passing:**
+  - [x] Admissions → Tyler Wiltshire (wilt15@vt.edu) ✅
+  - [x] UAP 5174 reflection policy → campus disambiguation triggered ✅
+  - [x] Travel reimbursement → Shelley Adkins (sladkins@vt.edu) ✅
 
-### Frontend
+### Frontend ← NEXT
 - [ ] Port chat UI from React artifact to Next.js components
 - [ ] Implement campus toggle state
 - [ ] Implement topic tab switching (Program / UAP 5174 / Admin)
@@ -123,7 +136,6 @@
 - [ ] Commit: `git commit -m "feat: chat UI components"`
 
 ### Feedback Mechanism (add in Phase 2, not Phase 5)
-*Best practice review identified this as the most important Phase 2 addition beyond the basic port.*
 - [ ] Thumbs-down button logs query + response to server (anonymous)
 - [ ] Log stored in Vercel KV store or append-only file
 - [ ] Review logged failures before each semester-start content refresh
@@ -136,19 +148,20 @@
 
 ### Deployment and Testing
 - [ ] Push to `main` → confirm Vercel auto-deploys
-- [ ] Set `ANTHROPIC_API_KEY` in Vercel dashboard (if not already done)
+- [ ] Set `ANTHROPIC_API_KEY` in Vercel dashboard
 - [ ] Test on live URL
 - [ ] Share URL with 2–3 SPIA colleagues for testing
 
-### Testing Checklist (before sharing)
-- [ ] Admissions question routes to Tyler Wiltshire (wilt15@vt.edu)
+### Remaining Testing Checklist (before sharing)
+- [x] Admissions question routes to Tyler Wiltshire
 - [ ] Assistantship question routes to Kelly Crist (kcrist@vt.edu)
 - [ ] Arlington question routes to Elia Amegashie (elia@vt.edu)
 - [ ] NR elective question surfaces OMNR-not-XMNR caveat
-- [ ] Reflection policy question triggers campus disambiguation
+- [x] Reflection policy question triggers campus disambiguation
 - [ ] Late policy shows both versions when campus not specified
 - [ ] Out-of-scope question redirects gracefully (no hallucination)
 - [ ] AI policy question shows Bieri policy + Arlington caveat
+- [x] Travel reimbursement routes to Shelley Adkins
 
 ---
 
@@ -248,3 +261,5 @@
 | ADR-014 | Dedicated private GitHub repo (`spia-murp-advisor`) | 2026-05-20 |
 | ADR-015 | Vercel linked to GitHub; GitHub as canonical source | 2026-05-20 |
 | ADR-016 | content/ folder for human-readable knowledge sources | 2026-05-20 |
+| ADR-017 | src/ directory layout; claude-sonnet-4-6 model string | 2026-05-21 |
+| ADR-018 | Claude Code runs in WSL — file transfer protocol | 2026-05-21 |
