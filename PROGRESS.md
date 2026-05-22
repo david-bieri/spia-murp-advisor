@@ -1,7 +1,7 @@
 # SPIA Bot — Implementation Progress
 
-**Current phase:** Phase 1 (wrapping up) → Phase 2 (next)
-**Last updated:** 2026-05-20
+**Current phase:** Phase 2 (in progress — frontend next)
+**Last updated:** 2026-05-21
 
 ---
 
@@ -23,12 +23,13 @@
 
 ### Knowledge Layer — Layer 2b (MURP Elective Course Ecosystem)
 *Source: Course_Tracking.xlsx — 69 courses, 9 departments*
-- [ ] Add Natural Resources enrollment caveat (OMNR not XMNR; campus override via MNR dept)
-- [ ] Add NR certificate note (Natural Resources, Watershed Management, Environmental GIS)
-- [ ] Add concentration → course mapping (top 4–5 courses per concentration, 7 concentrations)
-- [ ] Add key scheduling notes (NR 5014 Summer III only; NR 5114 study abroad caveat; CEE 5204 retirement flag)
-- [ ] Flag 7 stale courses (not offered 3+ years) as uncertain availability
-- [ ] Note 3 new CEE transportation courses and 3 upcoming TBD NR courses
+*Implemented in `src/content/murp_electives.md` (Phase 2) rather than Phase 1 React const*
+- [x] Natural Resources enrollment caveat (OMNR not XMNR; campus override via MNR dept)
+- [x] NR certificate note (Natural Resources, Watershed Management, Environmental GIS)
+- [x] Concentration → course mapping (top 4–5 courses per concentration, 7 concentrations)
+- [x] Key scheduling notes (NR 5014 Summer III only; NR 5114 study abroad caveat; CEE 5204 retirement flag)
+- [x] 7 stale courses flagged as uncertain availability
+- [x] 3 new CEE transportation courses and 3 upcoming TBD NR courses noted
 - [x] MURP curriculum: all 6 core courses with descriptions
 - [x] Elective concentrations (7 tracks)
 - [x] Capstone vs thesis distinction
