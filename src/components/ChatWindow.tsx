@@ -1,7 +1,15 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useEffect, useRef } from "react";
+import {
+  FormEvent,
+  Fragment,
+  KeyboardEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Message, { MessageData } from "./Message";
+import { StarterPrompts } from "./StarterPrompts";
 import type { Campus, Topic } from "./Sidebar";
 
 interface ChatWindowProps {
@@ -14,12 +22,23 @@ interface ChatWindowProps {
   onSend: (text: string) => void;
 }
 
+const ESCALATION_TEXT =
+  "Jane has suggested you reach out directly — Todd Schenk (tschenk@vt.edu) for academic advising, or Prof. Bieri (bieri@vt.edu) for anything else.";
+
+const ESCALATION_MESSAGE: MessageData = {
+  role: "assistant",
+  content: ESCALATION_TEXT,
+};
+
 function scopeLabel(topic: Topic, campus: Campus): string {
-  if (topic === "program") return "MURP curriculum";
+  if (topic === "program") return "MURP — program overview";
   if (topic === "admin") return "SPIA admin & contacts";
-  if (campus === "blacksburg") return "UAP 5174 — Blacksburg";
-  if (campus === "arlington") return "UAP 5174 — Arlington";
-  return "UAP 5174 — select campus";
+  if (topic === "electives") return "MURP electives";
+  if (topic === "certificates") return "MURP certificates";
+  // core — campus-aware
+  if (campus === "blacksburg") return "MURP core — Blacksburg";
+  if (campus === "arlington") return "MURP core — Arlington";
+  return "MURP core courses";
 }
 
 function TypingIndicator() {
@@ -57,13 +76,20 @@ export default function ChatWindow({
   onSend,
 }: ChatWindowProps) {
   const listRef = useRef<HTMLDivElement>(null);
-  const showCampusNudge = topic === "uap5174" && campus === null;
+  const [escalationAnchorIndex, setEscalationAnchorIndex] = useState<
+    number | null
+  >(null);
+  const showCampusNudge = topic === "core" && campus === null;
 
   useEffect(() => {
     const el = listRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
-  }, [messages, isLoading]);
+  }, [messages, isLoading, escalationAnchorIndex]);
+
+  function handleFeedback(index: number) {
+    setEscalationAnchorIndex((prev) => (prev === null ? index : prev));
+  }
 
   function submit() {
     const text = pendingInput.trim();
@@ -109,18 +135,30 @@ export default function ChatWindow({
         {messages.length === 0 && !isLoading && (
           <div className="max-w-xl mx-auto text-center text-zinc-600 py-10">
             <p className="font-serif text-2xl text-zinc-900 mb-2">
-              Ask about the MURP program.
+              Hi — I&apos;m Jane.
             </p>
             <p className="text-sm leading-relaxed">
-              I can answer questions about the MURP curriculum, UAP 5174
-              policies (Blacksburg or Arlington), and which SPIA staff member
-              to contact for what. I&apos;m informational only — for official
-              decisions, confirm with your advisor.
+              I know the MURP program well: the two-year course sequence,
+              certificate requirements, faculty research areas for thesis
+              matching, and who to contact when the answer needs a human.
             </p>
+            <div className="mt-6">
+              <StarterPrompts onSelect={(prompt) => onSend(prompt)} />
+            </div>
           </div>
         )}
         {messages.map((m, i) => (
-          <Message key={i} message={m} />
+          <Fragment key={i}>
+            <Message
+              message={m}
+              onFeedback={
+                m.role === "assistant" ? () => handleFeedback(i) : undefined
+              }
+            />
+            {escalationAnchorIndex === i && (
+              <Message message={ESCALATION_MESSAGE} />
+            )}
+          </Fragment>
         ))}
         {isLoading && <TypingIndicator />}
       </div>
@@ -130,8 +168,8 @@ export default function ChatWindow({
           className="px-6 py-2 text-xs border-t border-zinc-200"
           style={{ backgroundColor: "#FEF3E7", color: "#7A3E0A" }}
         >
-          Tip: select a campus in the sidebar for course-specific UAP 5174
-          answers.
+          Tip: select a campus in the sidebar for course-specific answers
+          about UAP 5174 and other core courses.
         </div>
       )}
 
@@ -144,7 +182,7 @@ export default function ChatWindow({
             value={pendingInput}
             onChange={(e) => setPendingInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about MURP, UAP 5174, or who to contact…"
+            placeholder="Ask Jane about the MURP program or who to contact … (don't mention Robert Moses)"
             rows={2}
             className="flex-1 resize-none rounded-lg border border-zinc-300 px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#861F41]/40 focus:border-[#861F41]"
             disabled={isLoading}
