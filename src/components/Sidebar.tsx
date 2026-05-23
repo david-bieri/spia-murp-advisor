@@ -1,7 +1,7 @@
 "use client";
 
 export type Campus = "blacksburg" | "arlington" | null;
-export type Topic = "program" | "uap5174" | "admin";
+export type Topic = "program" | "core" | "electives" | "certificates" | "admin";
 
 interface SidebarProps {
   campus: Campus;
@@ -13,30 +13,50 @@ interface SidebarProps {
 
 const QUICK_QUESTIONS: Record<Topic, string[]> = {
   program: [
-    "What are the six MURP core courses?",
-    "What's the difference between the capstone and the thesis?",
+    "What's the difference between the Plan A thesis and the Plan B project?",
     "What dual degrees are available with the MURP?",
-    "Which graduate certificates pair with the MURP?",
+    "How many total credits does the MURP require?",
+    "What does the two-year course sequence look like?",
   ],
-  uap5174: [
-    "How is the final grade calculated?",
-    "What's the reflection policy?",
-    "What's the late assignment policy?",
-    "Is there an AI use policy?",
+  core: [
+    "What are the late work and attendance policies for UAP 5174?",
+    "What does UAP 5084 cover and who teaches it?",
+    "What is covered in UAP 5224 Planning Methods and Technologies?",
+    "How does the studio sequence in UAP 5125 and 5126 work?",
+  ],
+  electives: [
+    "What electives focus on housing and community development?",
+    "What transportation planning courses are available?",
+    "Which UAP 5424 topics sections are currently offered?",
+    "Can I take GIA or SPIA courses as MURP electives?",
+  ],
+  certificates: [
+    "What courses count toward the Land Use Planning certificate?",
+    "What is the Transportation Planning certificate and what does it require?",
+    "Can I complete more than one certificate alongside the MURP?",
+    "Do certificate courses count toward my MURP elective credits?",
   ],
   admin: [
     "Who do I contact about admissions?",
     "Who handles graduate assistantships?",
     "How do I get reimbursed for travel?",
-    "Who's the Arlington campus contact?",
+    "Who is the Arlington campus administrative contact?",
   ],
 };
 
 const TOPIC_LABELS: Record<Topic, string> = {
   program: "Program",
-  uap5174: "UAP 5174",
+  core: "Core",
+  electives: "Electives",
+  certificates: "Certs",
   admin: "Admin",
 };
+
+// Two rows: [Program | Admin] on top, [Core | Electives | Certs] below
+const TOPIC_ROWS: Topic[][] = [
+  ["program", "admin"],
+  ["core", "electives", "certificates"],
+];
 
 export default function Sidebar({
   campus,
@@ -51,12 +71,11 @@ export default function Sidebar({
       style={{ backgroundColor: "#861F41" }}
     >
       <div className="px-6 pt-6 pb-4 border-b border-white/15">
-        <h1 className="font-serif text-2xl leading-tight">
-          SPIA MURP Advisor
-        </h1>
-        <p className="mt-1 text-xs text-white/75">
-          Virginia Tech · School of Public and International Affairs
-        </p>
+        <img
+          src="/images/spia/SchoolofPublicandInternationalAffairs_Horizontal_RGB_white.png"
+          alt="School of Public and International Affairs — Virginia Tech"
+          className="w-full max-w-[220px]"
+        />
       </div>
 
       <div className="px-6 pt-5">
@@ -84,8 +103,8 @@ export default function Sidebar({
         </div>
         {campus === null && (
           <p className="mt-2 text-[11px] text-white/60 leading-snug">
-            UAP 5174 policies differ between campuses — select one for
-            course-specific answers.
+            Some core course policies differ between campuses — select one
+            for course-specific answers.
           </p>
         )}
       </div>
@@ -94,24 +113,31 @@ export default function Sidebar({
         <p className="text-xs uppercase tracking-wide text-white/70 mb-2">
           Topic
         </p>
-        <div className="flex rounded-lg overflow-hidden bg-white/10">
-          {(Object.keys(TOPIC_LABELS) as Topic[]).map((t) => {
-            const active = topic === t;
-            return (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setTopic(t)}
-                className={`flex-1 px-2 py-1.5 text-xs font-medium transition ${
-                  active
-                    ? "bg-[#E5751F] text-white"
-                    : "text-white/85 hover:bg-white/10"
-                }`}
-              >
-                {TOPIC_LABELS[t]}
-              </button>
-            );
-          })}
+        <div className="flex flex-col gap-1">
+          {TOPIC_ROWS.map((row, rowIndex) => (
+            <div
+              key={rowIndex}
+              className="flex rounded-lg overflow-hidden bg-white/10"
+            >
+              {row.map((t) => {
+                const active = topic === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTopic(t)}
+                    className={`flex-1 px-2 py-1.5 text-xs font-medium transition ${
+                      active
+                        ? "bg-[#E5751F] text-white"
+                        : "text-white/85 hover:bg-white/10"
+                    }`}
+                  >
+                    {TOPIC_LABELS[t]}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
 

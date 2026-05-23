@@ -44,7 +44,7 @@ export async function POST(req: Request) {
   const lastUserQuery =
     [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
 
-  const { text: contextText } = await getContext(lastUserQuery, topic);
+  const { text: contextText, sources } = await getContext(lastUserQuery, topic);
   const system = buildSystemPrompt(contextText);
 
   try {
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       .map((b) => (b.type === "text" ? b.text : ""))
       .join("");
 
-    return Response.json({ text });
+    return Response.json({ text, sources });
   } catch (err) {
     if (err instanceof Anthropic.APIError) {
       return Response.json(

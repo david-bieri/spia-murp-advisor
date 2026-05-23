@@ -14,9 +14,9 @@ const STARTER_PROMPTS = [
       "I'm interested in housing policy and community development — which MURP faculty work in those areas?",
   },
   {
-    label: "Plan A vs Plan B",
+    label: "Thesis methods",
     prompt:
-      "What's the difference between the Plan A thesis and the Plan B professional project?",
+      "What research methods have past MURP theses used for housing policy or community development research?",
   },
   {
     label: "Assistantships",
@@ -24,9 +24,9 @@ const STARTER_PROMPTS = [
       "How do graduate assistantships work in the MURP program, and who should I contact?",
   },
   {
-    label: "4+1 pathway",
+    label: "UAP 5174 policy",
     prompt:
-      "I'm a current VT undergraduate. How does the 4+1 accelerated MURP pathway work?",
+      "What are the late work and attendance policies for UAP 5174? I need to know which campus first.",
   },
 ];
 

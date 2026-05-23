@@ -43,7 +43,7 @@ export default function Home() {
         body: JSON.stringify({ messages: apiMessages, topic }),
       });
 
-      const data = (await res.json()) as { text?: string; error?: string };
+      const data = (await res.json()) as { text?: string; sources?: string[]; error?: string };
 
       if (!res.ok) {
         throw new Error(data.error ?? `API responded ${res.status}`);
@@ -54,7 +54,7 @@ export default function Home() {
 
       setMessages([
         ...nextMessages,
-        { role: "assistant", content: data.text },
+        { role: "assistant", content: data.text, sources: data.sources ?? [] },
       ]);
     } catch (err) {
       console.error(err);
