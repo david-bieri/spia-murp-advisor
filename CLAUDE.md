@@ -1,4 +1,4 @@
-# SPIA Bot — Claude Code Session Context
+# Jane (SPIA MURP Advisor Bot) — Claude Code Session Context
 
 This file is loaded automatically at the start of every Claude Code session.
 Keep it concise. Full detail lives in the files listed below.
@@ -7,13 +7,19 @@ Keep it concise. Full detail lives in the files listed below.
 
 ## What This Project Is
 
-A departmental AI advising assistant for the MURP (Master of Urban and Regional Planning)
-program at Virginia Tech's School of Public and International Affairs (SPIA).
+**Jane** — a departmental AI advising assistant for the MURP (Master of Urban
+and Regional Planning) program at Virginia Tech's School of Public and
+International Affairs (SPIA). Named in the spirit of Jane Jacobs.
 
-Built in phases using the Strangler Fig pattern — the prototype is the skeleton, not a
-throwaway. Each phase replaces internals without restructuring the application.
+Students ask her about program requirements, course policies, faculty research,
+and administrative contacts. She answers with warmth, precision, and the
+occasional planning pearl.
+
+Built in phases using the Strangler Fig pattern — the prototype is the
+skeleton, not a throwaway. Each phase replaces internals without restructuring.
 
 **Repo:** `spia-murp-advisor` (private GitHub)
+**Live URL:** spia-murp-advisor.vercel.app
 **Deployment:** Vercel — auto-deploys on push to `main`
 **Owner:** David Bieri (bieri@vt.edu)
 
@@ -23,19 +29,27 @@ throwaway. Each phase replaces internals without restructuring the application.
 
 1. `README.md` — architecture, current scope, knowledge layers, file structure
 2. `PROGRESS.md` — what's done, what's next, what's blocked, phase checklists
-3. `DECISIONS.md` — only if you face an architecture question (16 ADRs)
+3. `DECISIONS.md` — only if you face an architecture question (18 ADRs)
 
-After reading, summarise your understanding of current status and proposed next steps.
-Wait for confirmation before writing any code.
+After reading, summarise your understanding of current status and proposed
+next steps. Wait for confirmation before writing any code.
 
 ---
 
-## Current Phase: 2
+## Current Phase: 2 (complete) → Phase 3 beginning
 
-**Goal:** Port Phase 1 React artifact to a hosted Next.js app on Vercel.
-Same knowledge layer as Phase 1. No RAG yet. API route working before UI is built.
+**Phase 2 is largely complete.** The app is live on Vercel with the full
+course KB, Jane's personality, and the revised topic sidebar.
 
-**Immediate next task:** See Phase 2 checklist in PROGRESS.md.
+**Immediate Phase 3 priorities:**
+1. Feedback backend (Vercel KV) — before student exposure
+2. Word count / token audit — run before or just after full KB commit
+3. Topic-based context filtering (if audit shows >90K words)
+4. Faculty research profiles
+5. Program-level documents (requirements, graduation checklist, admissions, funding)
+6. MPIA content (first program expansion — see ADR-012)
+
+See PROGRESS.md for full Phase 3 checklist.
 
 ---
 
@@ -45,72 +59,81 @@ Same knowledge layer as Phase 1. No RAG yet. API route working before UI is buil
 - Anthropic SDK · model: `claude-sonnet-4-6`
 - Vercel deployment (GitHub-linked, auto-deploy on push to `main`)
 - Node.js 18+
-- Directory layout: `src/` (Next.js default — all app code under `src/`)
+
+**Dev environment:**
+- Windows repo: `C:\Users\bieri\OneDrive\Documents\GitHub\spia-murp-advisor`
+- All git operations in PowerShell only
+- No npm at office computer — add dependencies to package.json manually;
+  Vercel installs on build
+- Claude Code runs in WSL Linux (separate environment from Windows repo)
 
 ---
 
 ## Non-Negotiable Rules
 
-**Git**
-- Never run `git init` — this repo already exists with a commit history
-- Always branch from main: `git checkout -b feat/your-task-name`
-- Do not run git commands autonomously — user handles all git operations in PowerShell
-- Print file contents for the user to copy manually into the Windows repo
-
-**Environment**
-- Claude Code runs in WSL Linux — the Windows repo is at
-  `C:\Users\bieri\Documents\GitHub\spia-murp-advisor`
-- These are separate filesystems — files written in WSL are not visible in the Windows repo
-- Never attempt to write files directly to the repo or run git operations
-- Always print file contents so the user can copy them manually into the correct Windows path
-
 **Security**
-- `ANTHROPIC_API_KEY` goes in `.env.local` ONLY — never in any client-side file
-- `.env.local` is in `.gitignore` — never commit it
-- API calls happen in `app/api/chat/route.ts` (server-side) only
+- `ANTHROPIC_API_KEY` in `.env.local` ONLY — never in any client-side file
+- `.env.local` in `.gitignore` — never commit it
+- API calls in `app/api/chat/route.ts` (server-side) only
 
 **Architecture**
-- `getContext(query)` lives in `lib/knowledge.ts` — this is the ONLY function the chat
-  layer calls to retrieve knowledge
-- The function signature `getContext(query) → { text: string, sources: string[] }`
-  must never change between phases — only the implementation behind it changes
-- Chat logic never imports raw document content directly
+- `getContext(query)` in `lib/knowledge.ts` is the ONLY function the chat
+  layer calls for knowledge retrieval
+- Signature `getContext(query) → { text: string, sources: string[] }` must
+  never change between phases — only the implementation behind it changes
 
 **Knowledge content**
-- Source documents live in `content/` as plain markdown files — not embedded in TypeScript
-- `lib/knowledge.ts` assembles content from `content/` files — it is an assembler, not a store
-- `lib/systemPrompt.ts` handles system prompt assembly — separate from knowledge retrieval
+- Source documents in `src/content/` as plain `.md` files
+- `lib/knowledge.ts` assembles from `src/content/` — it is an assembler, not a store
+- `lib/system-prompt.ts` (function `buildSystemPrompt(context)`) — separate from knowledge
 
 **Branding**
-- VT maroon: `#861F41`
-- VT orange: `#E5751F`
-- Font: DM Sans (body) · DM Serif Display (headings)
+- VT maroon: `#861F41` · VT orange: `#E5751F`
 
 **Campus disambiguation**
-- UAP 5174 policies differ substantially between Blacksburg (Bieri) and Arlington (Cowell)
-- NEVER merge or average policies across campuses — always label `[Blacksburg]` / `[Arlington]`
-- When campus is unknown, ask before answering policy questions
+- Many MURP core courses differ between Blacksburg and Arlington/NCR
+- NEVER merge policies across campuses
+- Campus nudge shows when `topic === "core" && campus === null`
 
 **Scope**
-- Bot serves MURP graduate students only — no undergraduate courses
-- Bot answers factual questions about documented policies — it does not make recommendations
-- Every unanswerable question routes to a specific staff member with their email
+- Jane serves MURP graduate students only — no undergraduate courses
+- Factual answers only — no recommendations, no enrollment advice
+- Every unanswerable question routes to a specific staff member with email
+
+**Jane's personality**
+- Named after Jane Jacobs — references her ideas naturally, once per response max
+- Occasional dry Robert Moses humor — design/theory topics only, never emotional ones
+- Planning pearls — one in four/five responses, never for logistics queries
+- One register shift per response (Jacobs OR Moses OR pearl, not multiple)
 
 ---
 
-## Knowledge Layer Structure
+## Knowledge Layer Structure (current)
 
 ```
-src/content/                      (confirm exact path with codebase)
-├── spia_staff_contacts.md    Layer 1 — staff routing (who to contact for what)
-├── murp_curriculum.md        Layer 2 — program structure, faculty, tuition
-├── murp_electives.md         Layer 2b — curated cross-dept elective catalog
-├── uap5174_bieri_s26.md      Layer 3 — Blacksburg syllabus (Bieri, Spring 2026)
-└── uap5174_cowell_s24.md     Layer 3 — Arlington syllabus (Cowell, Spring 2024)
+src/content/
+├── spia_staff_contacts.md          Staff routing — who to contact for what
+├── murp_curriculum.md              Program structure, faculty, tuition
+├── murp_electives.md               Cross-dept elective catalog
+├── murp_faqs.md                    Common questions
+├── murp_4plus1.md                  Accelerated 4+1 pathway
+├── murp_certificates_detail.md     Certificate requirements
+├── murp_course_sequence.md         Two-year sequence
+├── murp_faculty_research.md        Faculty research areas
+├── murp_student_life.md            Student orgs, internships
+├── jacobs_concepts.md              Jane Jacobs knowledge base (synthesised)
+├── planning_pearls.md              30 planning wisdom pearls
+├── uap5174_blacksburg_bieri_s26.md UAP 5174 Blacksburg (Bieri, S26)
+├── uap5174_arlington_cowell_s24.md UAP 5174 Arlington (Cowell, S24)
+├── [uap/gia/spia]_*.md             Full course KB from syllabi_to_kb.py
+│                                   Naming: {course}_{campus}_{modality}_{instructor}_{term}.md
+├── thesis_*.md                     MURP thesis KB (research scope, methods, curriculum links)
+└── murp_rubric_*.md                Thesis/final project evaluation rubric
 ```
 
-`lib/knowledge.ts` assembles these files into `getContext()`.
-`lib/systemPrompt.ts` handles system prompt assembly separately.
+**Syllabi pipeline:** `dev/syllabi_to_kb.py`
+Converts PDF syllabi and MURP theses to structured `.md` KB files.
+See DECISIONS.md ADR-015 for design rationale and usage.
 
 ---
 
@@ -118,16 +141,18 @@ src/content/                      (confirm exact path with codebase)
 
 - `feat:` new feature or capability
 - `fix:` bug fix
-- `docs:` documentation updates (README, DECISIONS, PROGRESS, this file)
-- `content:` knowledge layer updates (content/ files or lib/knowledge.ts)
+- `docs:` documentation updates (README, DECISIONS, PROGRESS, CLAUDE.md)
+- `content:` knowledge layer updates (src/content/ files or lib/knowledge.ts)
+- `ui:` component or styling changes
 - `chore:` config, dependencies, .gitignore
 
-Commit after every meaningful unit of work. Update PROGRESS.md before ending a session.
+Commit after every meaningful unit of work.
+Update PROGRESS.md before ending a session.
 
 ---
 
 ## Updating This File
 
-Update the **Current Phase** section when a phase milestone is reached.
-Everything else is stable across phases — do not expand this file with content
-that belongs in README.md, DECISIONS.md, or PROGRESS.md.
+Update **Current Phase** and **Knowledge Layer Structure** when changes occur.
+Everything else is stable. Do not expand with content that belongs in
+README.md, DECISIONS.md, or PROGRESS.md.

@@ -355,150 +355,136 @@ This enables filtered retrieval: "What online courses support the environmental 
 
 ---
 
-## ADR-014: Dedicated Private GitHub Repository
+## ADR-014: Jane Persona — Jacobs Namesake, Moses Humor, Planning Pearls
 
-**Date:** 2026-05-20
+**Date:** 2026-05-23
 **Status:** Accepted
 
 **Decision:**
-The spia-bot is housed in its own dedicated private GitHub repository named `spia-murp-advisor`. It is not added to any existing analytics or research repo.
+The bot is named Jane, after Jane Jacobs. Her personality has three active layers:
+(1) Jacobs knowledge — weaves ideas from *Death and Life of Great American Cities*
+naturally into advising responses; (2) Robert Moses humor — dry, collegial, reserved
+for design and theory discussions only; (3) planning pearls — brief unsolicited
+observations from planning practice, roughly one in four or five responses.
 
 **Rationale:**
-Existing repos contain Python analytics scripts and LaTeX — a completely different stack from Next.js/TypeScript. Mixing stacks in one repo creates `.gitignore` complexity, pollutes commit history, and confuses Claude Code's file-reading context. One repo, one purpose.
+A purely functional advising bot is forgettable. A named character with a point of view
+is memorable and more likely to be shared with peers. The Jacobs framing is substantively
+relevant — her ideas about mixed use, campus disambiguation, eyes on the street, and
+organised complexity are directly applicable to MURP curriculum content. Moses functions
+as the foil that makes the Jacobs framing legible without explanation to anyone who has
+studied planning history. The pearls layer adds professional depth without tipping into
+the bot lecturing students.
 
-**Repository settings:**
-- Name: `spia-murp-advisor`
-- Visibility: Private initially — knowledge layer contains staff emails and internal routing details, all technically public but not appropriate for broad indexing. Revisit for public release at Phase 4/5.
-- Initialize: empty (no auto-generated README — project README is already authored)
-
-**Consequences:**
-- All Phase 2+ development happens in this repo
-- Vercel deployment links to this repo (see ADR-015)
-- If/when repo goes public, review `content/` and `lib/knowledge.ts` for anything that should not be broadly searchable
-
----
-
-## ADR-015: Vercel Linked to GitHub; GitHub as Canonical Source
-
-**Date:** 2026-05-20
-**Status:** Accepted
-
-**Decision:**
-Vercel deployment is connected directly to the GitHub repo rather than triggered manually via `vercel deploy`. Push to `main` → automatic redeploy. GitHub is the single canonical source of truth for all project files.
-
-**Rationale:**
-Manual deployment adds a step that will be skipped under time pressure. GitHub-linked Vercel removes the step entirely — the only action required to deploy is a normal git push. This also means the deployed version is always traceable to a specific commit.
-
-**Sync discipline for Claude Project:**
-The three project files (README.md, DECISIONS.md, PROGRESS.md) exist in two places: this Claude Project and the GitHub repo. GitHub is canonical. The Claude Project copies are reference snapshots. **Rule:** after any Claude Code session that materially updates the project files, re-upload the updated versions to this Claude Project. This takes under a minute and keeps the design-layer context current.
-
-**Branch strategy:**
-- `main` — always deployable; Vercel deploys from this branch
-- `dev` — active development; merge to main when a phase milestone is complete
-- Feature branches optional at current solo-project scale
-
-**Commit message convention:**
-- `feat:` new feature or capability
-- `docs:` documentation updates (README, DECISIONS, PROGRESS, CLAUDE.md)
-- `fix:` bug fix
-- `content:` knowledge layer updates (lib/knowledge.ts or content/ folder)
-- `chore:` dependency updates, config changes
-
-**Consequences:**
-- Every meaningful code change should be committed before ending a Claude Code session
-- .env.local is never committed (see .gitignore in ADR-016)
-- Vercel environment variables (ANTHROPIC_API_KEY) are set in Vercel dashboard, not in any file
-
----
-
-## ADR-016: content/ Folder for Human-Readable Knowledge Sources
-
-**Date:** 2026-05-20
-**Status:** Accepted
-
-**Decision:**
-Source knowledge documents live in a `content/` folder as plain markdown files. `lib/knowledge.ts` assembles these into the `getContext()` response. In Phase 3, the RAG ingestion pipeline reads directly from `content/`.
-
-**Target structure:**
-```
-content/
-├── murp_curriculum.md        ← Layer 2: program structure, concentrations, faculty
-├── spia_staff_contacts.md    ← Layer 1: staff routing table
-├── murp_electives.md         ← Layer 2b: curated elective catalog and caveats
-├── uap5174_bieri_s26.md      ← Layer 3: Blacksburg syllabus
-└── uap5174_cowell_s24.md     ← Layer 3: Arlington syllabus
-```
-
-**Rationale:**
-Keeping knowledge content in markdown files rather than embedded TypeScript strings means: (1) content updates require no TypeScript knowledge — edits to plain text files; (2) the `content/` folder is exactly what Phase 3 RAG ingestion reads, so no content migration is needed at Phase 3; (3) non-technical contributors (e.g., Kelly Crist updating staff contacts) can submit pull requests or provide edited markdown without touching application code.
+**Constraints:**
+- One register shift per response (Jacobs reference OR Moses joke OR pearl — not multiple)
+- No humor on admissions, funding, thesis stress, or anything emotionally weighted
+- Jacobs and the handbook never contradict each other — handbook always governs
+- Jacobs knowledge implemented as synthesised concepts file (`jacobs_concepts.md`),
+  not by reproducing copyrighted text
 
 **Alternatives considered:**
-- All content embedded in lib/knowledge.ts: rejected — conflates content ownership with code ownership; creates friction for non-developer contributors
-- CMS (Contentful, Sanity): rejected — over-engineering for current scale; reconsider at Phase 4
-
-**`.gitignore` requirements:**
-```gitignore
-# Environment — NEVER commit
-.env
-.env.local
-.env*.local
-# Dependencies
-node_modules/
-# Build output
-.next/
-out/
-# Vercel
-.vercel/
-# OS
-.DS_Store
-Thumbs.db
-```
-
-**Consequences:**
-- content/ folder is committed to the repo — it contains no secrets, only program information
-- lib/knowledge.ts becomes an assembler, not a content store
-- Phase 3 RAG ingestion script points to content/ with no migration needed
-- Content update workflow: edit markdown → commit → push → Vercel redeploys automatically
+- Generic persona: rejected — no differentiation, no memorability
+- Full book ingestion: rejected — copyright constraint; synthesised concepts file
+  achieves the same effect for advising purposes
 
 ---
 
-## ADR-017: src/ Directory Layout; claude-sonnet-4-6 as Model String
+## ADR-015: Syllabi-to-KB Pipeline (syllabi_to_kb.py)
 
-**Date:** 2026-05-20
+**Date:** 2026-05-23
 **Status:** Accepted
 
 **Decision:**
-Project uses Next.js `src/` directory layout (all application code under `src/`). Model string is `claude-sonnet-4-6`, not `claude-sonnet-4-20250514`.
+A Python script (`dev/syllabi_to_kb.py`) converts PDF syllabi, MURP theses, and rubric
+documents to structured markdown KB files using the Anthropic API. Document type detection
+(syllabus / thesis / rubric) is automatic. Output filenames encode course, campus,
+modality, instructor, and term.
 
-**Rationale — src/ layout:**
-`create-next-app` scaffolded the project with `src/` layout, which is the current Next.js convention. Flattening to root-level layout at this stage would require touching every import path for no architectural gain. Accepted as-is; documentation updated to match.
+**Rationale:**
+Manual KB authoring does not scale to 60+ course syllabi across three programs and two
+campuses. The pipeline makes KB refresh a one-command operation at semester start.
+Thesis files give Jane research precedents for advising on thesis scope, methods, and
+faculty matching — content that cannot be derived from syllabi alone.
 
-**Rationale — model string:**
-`claude-sonnet-4-6` is the correct Claude 4 family model string. `claude-sonnet-4-20250514` was a Claude 3.x era date-suffixed format carried over from earlier documentation. The running code is authoritative — documentation updated to match.
+**Key design decisions within the pipeline:**
+- Folder name (not PDF filename) identifies the course — syllabi filenames are inconsistent
+- Campus detected from document content first, PDF filename second
+- NCR and Arlington normalised to the same slug (`arlington`)
+- Modality slug (`hybrid`, `online`) in filename only for non-default cases
+- Skip logic uses CSV log (exact source path match) — reliable for multi-syllabus folders
+- Rubric files detected by `"rubric" in filename` — separate prompt, stable output filename
+- Three extraction prompts: SYLLABUS_PROMPT, THESIS_PROMPT, RUBRIC_PROMPT
 
 **Consequences:**
-- File structure diagrams in README.md and CLAUDE.md reflect `src/` prefix
-- `content/` folder lives at `src/content/` — confirm exact path before populating
-- All future documentation uses `claude-sonnet-4-6` as the model string
-- When Claude Code encounters model references, use `claude-sonnet-4-6`
+- KB refresh = re-run pipeline + copy output + git push
+- Scanned PDFs require OCR pre-processing (ocr_batch.py) before pipeline
+- `dev/syllabi_to_kb.py` is a project dependency — keep in repo, not ad-hoc
 
 ---
 
-## ADR-018: Claude Code Runs in WSL — File Transfer Protocol
+## ADR-016: Topic Sidebar Restructure
 
-**Date:** 2026-05-21
+**Date:** 2026-05-23
 **Status:** Accepted
 
 **Decision:**
-Claude Code Desktop App runs in a WSL Linux environment (`/home/user/`). The Windows repo lives at `C:\Users\bieri\Documents\GitHub\spia-murp-advisor`. These are separate filesystems. Claude Code must never write files directly to the repo or run git commands. The established protocol is: Claude Code prints file contents; David creates files manually in Windows via Notepad; David handles all git operations in PowerShell.
+Topic tabs restructured from three (`Program | UAP 5174 | Admin`) to five in two rows:
+- Row 1: `Program | Admin`
+- Row 2: `Core | Electives | Certificates`
 
-**Background:**
-This was discovered during Phase 2 development when Claude Code reported creating files at `/home/user/spia-murp-advisor/src/lib/knowledge.ts` but those files were not present in the Windows repo. The same issue caused the earlier unrelated histories git problem — Claude Code ran `git init` in WSL, creating a separate commit history disconnected from the Windows GitHub repo.
+**Rationale:**
+`UAP 5174` as a tab was a Phase 1 artifact when that was the only course in the KB.
+With 60+ courses available, the three new content tabs correspond to the actual structure
+of MURP curriculum decisions. Two rows prevents cramping in the 320px sidebar.
 
 **Consequences:**
-- CLAUDE.md Non-Negotiable Rules section includes explicit WSL/Windows environment note
-- Every Claude Code session: Claude Code generates code, prints it, David creates files in Windows
-- No exceptions — even for "small" files or "quick" edits
-- git operations: PowerShell only
-- File creation: Notepad (or VS Code) in Windows only
-- This protocol adds manual steps but eliminates the filesystem confusion that caused multiple debugging sessions
+- `Topic` type: `"uap5174"` removed; `"core" | "electives" | "certificates"` added
+- `scopeLabel()` updated; campus nudge fires on `topic === "core"` (not `"uap5174"`)
+
+---
+
+## ADR-017: Performance Optimization Sequence
+
+**Date:** 2026-05-23
+**Status:** Accepted
+
+**Decision:**
+Three-stage sequence tied to deployment milestones:
+1. **Measure now** — word count audit before full KB commit
+2. **Topic-based context filtering** — after colleague share (before if >90K words)
+3. **RAG** — only when multi-program scope makes filtered context genuinely too large
+
+**Rationale:**
+Full-context injection provides accuracy: Jane sees all knowledge on every query and
+never misses a relevant policy due to retrieval failure. For the colleague share,
+accuracy matters more than latency. RAG introduces retrieval failure modes inappropriate
+to deploy before usage patterns are understood. Topic filtering achieves 60–70%
+efficiency gain without retrieval risk.
+
+**Consequences:**
+- Do not implement RAG before MPIA content is in and topic filtering is proven
+- `getContext()` signature unchanged; Phase 3 passes topic as filter parameter
+
+---
+
+## ADR-018: Opening Message as Pre-Populated Assistant Turn
+
+**Date:** 2026-05-23
+**Status:** Accepted
+
+**Decision:**
+Jane's opening message is a pre-populated `MessageData` object in `messages` state
+initial value (`[OPENING_MESSAGE]`). Starter prompt chips render below it when
+`messages.length === 1`.
+
+**Rationale:**
+A pre-populated message persists in the conversation and travels to the API as a real
+assistant turn, establishing tone from the first exchange. An empty-state heading
+disappears on the first user message. Chips-below-opening-message requires no
+conditional empty-state component.
+
+**Consequences:**
+- `messages.length === 0` never occurs in normal operation
+- Opening message is part of every API call's conversation history — correct behaviour
+- `opening-message.ts` imports `MessageData` from `Message.tsx` (only new cross-dependency)
