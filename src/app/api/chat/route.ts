@@ -38,11 +38,13 @@ export async function POST(req: Request) {
     );
   }
 
-  const messages = (body as { messages: ChatMessage[] }).messages.slice(-10);
+  const typedBody = body as { messages: ChatMessage[]; topic?: string };
+  const messages = typedBody.messages.slice(-10);
+  const topic = typeof typedBody.topic === "string" ? typedBody.topic : undefined;
   const lastUserQuery =
     [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
 
-  const { text: contextText } = await getContext(lastUserQuery);
+  const { text: contextText } = await getContext(lastUserQuery, topic);
   const system = buildSystemPrompt(contextText);
 
   try {

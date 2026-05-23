@@ -4,6 +4,7 @@ import { useState } from "react";
 import Sidebar, { Campus, Topic } from "@/components/Sidebar";
 import ChatWindow from "@/components/ChatWindow";
 import type { MessageData } from "@/components/Message";
+import { OPENING_MESSAGE } from "@/lib/opening-message";
 
 const CAMPUS_PREFIX = /^\[Campus:\s+(Blacksburg|Arlington)\]\s+/;
 
@@ -17,7 +18,7 @@ function applyCampusPrefix(text: string, campus: Campus): string {
 export default function Home() {
   const [campus, setCampus] = useState<Campus>(null);
   const [topic, setTopic] = useState<Topic>("program");
-  const [messages, setMessages] = useState<MessageData[]>([]);
+  const [messages, setMessages] = useState<MessageData[]>([OPENING_MESSAGE]);
   const [pendingInput, setPendingInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,16 +27,20 @@ export default function Home() {
       role: "user",
       content: applyCampusPrefix(rawText, campus),
     };
+
     const nextMessages = [...messages, userMessage];
     setMessages(nextMessages);
     setPendingInput("");
     setIsLoading(true);
 
     try {
+      // Filter clientOnly messages before sending to API
+      const apiMessages = nextMessages.filter((m) => !m.clientOnly);
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: nextMessages }),
+        body: JSON.stringify({ messages: apiMessages, topic }),
       });
 
       const data = (await res.json()) as { text?: string; error?: string };
