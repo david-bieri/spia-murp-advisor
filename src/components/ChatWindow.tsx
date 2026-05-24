@@ -160,6 +160,9 @@ export default function ChatWindow({
                 m.role === "assistant" ? () => handleFeedback(i) : undefined
               }
             />
+            {i === 0 && messages.length === 1 && (
+              <StarterPrompts onSelect={(prompt) => onSend(prompt)} />
+            )}
             {escalationAnchorIndex === i && (
               <Message message={ESCALATION_MESSAGE} />
             )}

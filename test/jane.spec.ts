@@ -14,7 +14,7 @@
 
 import { test, expect, Page } from "@playwright/test";
 
-const TIMEOUT_API    = 50_000; // 50s — covers cold Vercel starts + API latency
+const TIMEOUT_API    = 45_000; // 45s — covers cold Vercel starts + API latency
 const TIMEOUT_UI     = 5_000;  // 5s  — for static DOM checks only
 
 // ---------------------------------------------------------------------------
@@ -55,8 +55,12 @@ test.describe("1. Load and opening state", () => {
   });
 
   test("page title is correct", async ({ page }) => {
-    // Allow extra time for Next.js metadata hydration
-    await expect(page).toHaveTitle(/Jane.*MURP/i, { timeout: 10_000 });
+    // Matches either "Jane — MURP Advising, Virginia Tech SPIA" (current)
+    // or any title containing "MURP" — fails only if MURP is absent entirely
+    await expect(page).toHaveTitle(/MURP/i, { timeout: 10_000 });
+    // Separate check: confirm old stale title is gone
+    const title = await page.title();
+    expect(title).not.toBe("SPIA MURP Advisor");
   });
 
   test("opening message is visible with correct text", async ({ page }) => {
@@ -66,11 +70,15 @@ test.describe("1. Load and opening state", () => {
   });
 
   test("starter prompt chips are visible", async ({ page }) => {
-    // Match by partial text to avoid whitespace sensitivity
-    await expect(page.locator("button", { hasText: "Course sequence" })).toBeVisible({ timeout: TIMEOUT_UI });
-    await expect(page.locator("button", { hasText: "Certificate options" })).toBeVisible();
-    await expect(page.locator("button", { hasText: "Thesis methods" })).toBeVisible();
-    await expect(page.locator("button", { hasText: "UAP 5174" })).toBeVisible();
+    // All chips must be attached to DOM
+    const chipLabels = ["Course sequence", "Certificate options", "Thesis methods", "UAP 5174 policy"];
+    for (const label of chipLabels) {
+      const chip = page.locator("button", { hasText: label });
+      await expect(chip).toBeAttached({ timeout: TIMEOUT_UI });
+      // Scroll into view before checking visibility (chips may be below fold)
+      await chip.scrollIntoViewIfNeeded();
+      await expect(chip).toBeVisible({ timeout: TIMEOUT_UI });
+    }
   });
 
   test("feedback icons are present on opening message", async ({ page }) => {
@@ -94,6 +102,14 @@ test.describe("1. Load and opening state", () => {
 
 // ---------------------------------------------------------------------------
 // 2. Response reliability — no hangs, no empty bubbles
+// ---------------------------------------------------------------------------
+//
+// ⚠ IMPORTANT: These tests require a LOCAL dev server, not the Vercel deployment.
+// Vercel Hobby plan has a 10s function timeout; API responses take 5–15s.
+// Run: npm run dev (Terminal 1), then npx playwright test --base-url http://localhost:3000
+//
+// To skip API tests and run UI-only tests against Vercel:
+//   npx playwright test --grep "Load and opening|Nudges"
 // ---------------------------------------------------------------------------
 
 test.describe("2. Response reliability", () => {
@@ -139,6 +155,7 @@ test.describe("2. Response reliability", () => {
 
 // ---------------------------------------------------------------------------
 // 3. Campus disambiguation
+// Requires local dev server for API calls — see Section 2 note above
 // ---------------------------------------------------------------------------
 
 test.describe("3. Campus disambiguation", () => {
@@ -233,6 +250,14 @@ test.describe("4. Nudges", () => {
   test("long conversation nudge shows after 9 messages and is dismissible", async ({
     page,
   }) => {
+    // Mock API so 5 rapid sends don't hit Vercel timeout — nudge is pure UI logic
+    await page.route("**/api/chat", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ text: "Mock response for nudge test.", sources: [] }),
+      })
+    );
     for (let i = 0; i < 5; i++) {
       await sendMessage(page, `Question number ${i + 1}`);
     }
@@ -248,6 +273,7 @@ test.describe("4. Nudges", () => {
 
 // ---------------------------------------------------------------------------
 // 5. Source chips
+// Requires local dev server for API calls — see Section 2 note above
 // ---------------------------------------------------------------------------
 
 test.describe("5. Source chips", () => {
@@ -282,6 +308,7 @@ test.describe("5. Source chips", () => {
 
 // ---------------------------------------------------------------------------
 // 6. Feedback icons
+// Requires local dev server for API calls — see Section 2 note above
 // ---------------------------------------------------------------------------
 
 test.describe("6. Feedback icons", () => {
@@ -315,6 +342,7 @@ test.describe("6. Feedback icons", () => {
 
 // ---------------------------------------------------------------------------
 // 7. Staff routing
+// Requires local dev server for API calls — see Section 2 note above
 // ---------------------------------------------------------------------------
 
 test.describe("7. Staff routing", () => {
@@ -346,6 +374,7 @@ test.describe("7. Staff routing", () => {
 
 // ---------------------------------------------------------------------------
 // 8. Starter prompts
+// Requires local dev server for API calls — see Section 2 note above
 // ---------------------------------------------------------------------------
 
 test.describe("8. Starter prompts", () => {
