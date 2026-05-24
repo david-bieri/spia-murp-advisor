@@ -6,8 +6,6 @@ type ChatMessage = { role: "user" | "assistant"; content: string };
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// Extend Vercel function timeout — 30s covers cold starts + large contexts.
-// Requires Vercel Pro for values > 10s; on Hobby this is ignored but harmless.
 export const maxDuration = 30;
 
 function isChatMessage(m: unknown): m is ChatMessage {
@@ -52,69 +50,41 @@ export async function POST(req: Request) {
   const { text: contextText, sources } = await getContext(lastUserQuery, topic);
   const system = buildSystemPrompt(contextText);
 
+  // Abort if Anthropic hasn't responded within 25 seconds
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 25000);
+
   try {
-    // Stream the response — text appears incrementally, timeout risk eliminated.
-    const stream = await client.messages.stream({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1000,
-      system,
-      messages,
-    });
-
-    const encoder = new TextEncoder();
-
-    const readable = new ReadableStream({
-      async start(controller) {
-        let fullText = "";
-        try {
-          for await (const chunk of stream) {
-            if (
-              chunk.type === "content_block_delta" &&
-              chunk.delta.type === "text_delta"
-            ) {
-              fullText += chunk.delta.text;
-              // Stream each chunk as a JSON line
-              controller.enqueue(
-                encoder.encode(
-                  JSON.stringify({ type: "delta", text: chunk.delta.text }) +
-                    "\n",
-                ),
-              );
-            }
-          }
-          // Send final message with sources
-          controller.enqueue(
-            encoder.encode(
-              JSON.stringify({ type: "done", text: fullText, sources }) + "\n",
-            ),
-          );
-        } catch (err) {
-          controller.enqueue(
-            encoder.encode(
-              JSON.stringify({
-                type: "error",
-                error: err instanceof Error ? err.message : "Stream error",
-              }) + "\n",
-            ),
-          );
-        } finally {
-          controller.close();
-        }
+    const response = await client.messages.create(
+      {
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system,
+        messages,
       },
-    });
+      { signal: controller.signal },
+    );
 
-    return new Response(readable, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    });
+    clearTimeout(timeout);
+
+    const text = response.content
+      .map((b) => (b.type === "text" ? b.text : ""))
+      .join("");
+
+    return Response.json({ text, sources });
   } catch (err) {
+    clearTimeout(timeout);
     if (err instanceof Anthropic.APIError) {
       return Response.json(
         { error: err.message },
         { status: err.status ?? 500 },
+      );
+    }
+    // AbortError from our timeout
+    if (err instanceof Error && err.name === "AbortError") {
+      return Response.json(
+        { error: "Request timed out — please try again." },
+        { status: 504 },
       );
     }
     throw err;
