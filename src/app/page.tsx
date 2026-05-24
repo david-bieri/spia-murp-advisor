@@ -34,20 +34,12 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-<<<<<<< HEAD
-      // Filter clientOnly messages before sending to API
-=======
->>>>>>> 6f94e56779a9657494988ff5af2f55a15f90ff42
       const apiMessages = nextMessages.filter((m) => !m.clientOnly);
 
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-<<<<<<< HEAD
-        body: JSON.stringify({ messages: apiMessages }),
-=======
         body: JSON.stringify({ messages: apiMessages, topic }),
->>>>>>> 6f94e56779a9657494988ff5af2f55a15f90ff42
       });
 
       const data = (await res.json()) as {
@@ -87,7 +79,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-1 flex-col md:flex-row h-dvh w-full overflow-hidden">
+    <div className="flex flex-1 flex-col md:flex-row h-screen w-full overflow-hidden">
       <Sidebar
         campus={campus}
         setCampus={setCampus}
