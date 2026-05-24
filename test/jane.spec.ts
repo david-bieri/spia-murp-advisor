@@ -22,13 +22,16 @@ const TIMEOUT_UI     = 5_000;  // 5s  — for static DOM checks only
 // ---------------------------------------------------------------------------
 
 async function waitForResponse(page: Page): Promise<string> {
+  // Wait for Send to re-enable — signals isLoading = false
   await expect(
     page.getByRole("button", { name: "Send" })
   ).toBeEnabled({ timeout: TIMEOUT_API });
 
-  const bubbles = page.locator(".rounded-2xl.rounded-tl-sm");
-  const count   = await bubbles.count();
-  return (await bubbles.nth(count - 1).textContent()) ?? "";
+  // React 19 may batch the message render after isLoading flips.
+  // Wait for the last assistant bubble to contain actual text.
+  const lastBubble = page.locator(".rounded-2xl.rounded-tl-sm").last();
+  await expect(lastBubble).not.toBeEmpty({ timeout: 5_000 });
+  return (await lastBubble.textContent()) ?? "";
 }
 
 async function sendMessage(page: Page, text: string): Promise<string> {

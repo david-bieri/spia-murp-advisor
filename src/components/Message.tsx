@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export type Role = "user" | "assistant";
 
@@ -220,6 +221,7 @@ export default function Message({ message, onFeedback }: MessageProps) {
       <div className="flex flex-col gap-1 max-w-[80%]">
         <div className="rounded-2xl rounded-tl-sm bg-zinc-100 px-4 py-3 text-zinc-900 leading-relaxed shadow-sm prose prose-sm prose-zinc max-w-none">
           <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
             components={{
               h2: ({ children }) => (
                 <h2 className="text-sm font-semibold text-zinc-900 mt-3 mb-1">
