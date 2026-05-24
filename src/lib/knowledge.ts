@@ -20,20 +20,21 @@ const CONTENT_DIR = path.join(process.cwd(), "src", "content");
  *   Only spia_staff_contacts.md + murp_faqs.md — nothing else needed
  *
  * Token estimates (approximate):
- *   admin                            :  ~5K  (contacts + FAQs only)
- *   program (no course number)       :  ~30K (base set + theses)
- *   core / electives / certificates  :  ~95K (base + all courses + theses)
- *   any topic with course number     :  ~95K (query-aware override)
+ *   admin                              :  ~5K  (contacts + FAQs only)
+ *   program, no course number          :  ~30K (base + theses)
+ *   core / electives / certificates    :  ~95K (base + all courses + theses)
+ *   any topic, specific course number  :  ~35K (base + matching course files + theses)
  *
  * QUERY-AWARE OVERRIDE:
- *   If the query explicitly mentions a course number (e.g. "UAP 5174"),
- *   course files are loaded regardless of the active topic tab. This means
- *   a student asking about UAP 5174 on the Program tab still gets the right
- *   answer — the tab is a hint for vague queries, not a gate for specific ones.
+ *   If the query mentions a specific course number (e.g. "UAP 5174"), only the
+ *   files for that course are loaded alongside the base set — not the full 77-file
+ *   course KB. This keeps context lean and prevents Vercel function timeouts while
+ *   still giving Jane the right syllabus content. The topic tab is still respected
+ *   for broad queries where no course number is present.
  */
 
-// Matches UAP 5174, GIA5034, SPIA 5024, etc.
-const COURSE_NUMBER_RE = /\b(UAP|GIA|SPIA)\s*\d{4}/i;
+// Matches UAP 5174, GIA5034, SPIA 5024, uap5174, etc.
+const COURSE_NUMBER_RE = /\b(UAP|GIA|SPIA)\s*(\d{4})/i;
 
 function isBase(f: string): boolean {
   return (
@@ -60,22 +61,29 @@ export async function getContext(
     .filter((f) => f.endsWith(".md"))
     .sort();
 
-  // Query mentions a specific course number → always load course files
-  const queryCitesCourse = COURSE_NUMBER_RE.test(query);
-
-  const needsCourseFiles =
-    queryCitesCourse ||
-    topic === "core" ||
-    topic === "electives" ||
-    topic === "certificates";
+  // Check if the query mentions a specific course number
+  const courseMatch = query.match(COURSE_NUMBER_RE);
 
   let filesToLoad: string[];
 
-  if (topic === "admin" && !queryCitesCourse) {
+  if (courseMatch) {
+    // Specific course mentioned — load only that course's files + base + theses
+    // e.g. "UAP 5174" → prefix "uap5174"
+    const coursePrefix =
+      courseMatch[1].toLowerCase() + courseMatch[2].toLowerCase();
+    filesToLoad = allFiles.filter(
+      (f) => isBase(f) || isThesis(f) || f.startsWith(coursePrefix),
+    );
+  } else if (topic === "admin") {
     filesToLoad = allFiles.filter(
       (f) => f === "spia_staff_contacts.md" || f === "murp_faqs.md",
     );
-  } else if (needsCourseFiles) {
+  } else if (
+    topic === "core" ||
+    topic === "electives" ||
+    topic === "certificates"
+  ) {
+    // Broad course topic — load full course KB
     filesToLoad = allFiles.filter(
       (f) => isBase(f) || isCourse(f) || isThesis(f),
     );

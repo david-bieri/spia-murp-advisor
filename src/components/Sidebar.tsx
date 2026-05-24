@@ -13,10 +13,10 @@ interface SidebarProps {
 
 const QUICK_QUESTIONS: Record<Topic, string[]> = {
   program: [
-    "What's the difference between the Plan A thesis and the Plan B project?",
+    "What does the two-year course sequence look like?",
     "What dual degrees are available with the MURP?",
     "How many total credits does the MURP require?",
-    "What does the two-year course sequence look like?",
+    "What's the difference between a final project and doing a thesis?",
   ],
   core: [
     "What are the late work and attendance policies for UAP 5174?",
