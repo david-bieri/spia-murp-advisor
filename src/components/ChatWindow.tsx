@@ -31,14 +31,14 @@ const ESCALATION_MESSAGE: MessageData = {
 };
 
 function scopeLabel(topic: Topic, campus: Campus): string {
-  if (topic === "program") return "MURP — program overview";
-  if (topic === "admin") return "SPIA admin & contacts";
-  if (topic === "electives") return "MURP electives";
-  if (topic === "certificates") return "MURP certificates";
+  if (topic === "program") return "MURP Program";
+  if (topic === "admin") return "Contacts & Admin";
+  if (topic === "electives") return "Electives";
+  if (topic === "certificates") return "Certificates";
   // core — campus-aware
-  if (campus === "blacksburg") return "MURP core — Blacksburg";
-  if (campus === "arlington") return "MURP core — Arlington";
-  return "MURP core courses";
+  if (campus === "blacksburg") return "Core · Blacksburg";
+  if (campus === "arlington") return "Core · Arlington";
+  return "Core Courses";
 }
 
 function TypingIndicator() {
@@ -114,7 +114,7 @@ export default function ChatWindow({
       <header className="flex items-center justify-between px-6 py-4 border-b border-zinc-200">
         <div>
           <p className="text-xs uppercase tracking-wide text-zinc-500">
-            Scope
+            Asking about
           </p>
           <p className="font-serif text-lg text-zinc-900 leading-tight">
             {scopeLabel(topic, campus)}
