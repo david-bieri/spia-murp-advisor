@@ -3,6 +3,26 @@ import path from "node:path";
 
 const CONTENT_DIR = path.join(process.cwd(), "src", "content");
 
+// Module-level cache — persists across requests on warm serverless instances.
+// Cold start reads from disk; subsequent requests return from memory.
+let cachedFileList: string[] | null = null;
+const fileContentCache = new Map<string, string>();
+
+async function getFileList(): Promise<string[]> {
+  if (cachedFileList) return cachedFileList;
+  cachedFileList = (await readdir(CONTENT_DIR))
+    .filter((f) => f.endsWith(".md"))
+    .sort();
+  return cachedFileList;
+}
+
+async function readFileCached(name: string): Promise<string> {
+  if (fileContentCache.has(name)) return fileContentCache.get(name)!;
+  const content = await readFile(path.join(CONTENT_DIR, name), "utf8");
+  fileContentCache.set(name, content);
+  return content;
+}
+
 /**
  * File loading strategy — two tiers based on active topic:
  *
@@ -57,9 +77,7 @@ export async function getContext(
   query: string,
   topic?: string,
 ): Promise<{ text: string; sources: string[] }> {
-  const allFiles = (await readdir(CONTENT_DIR))
-    .filter((f) => f.endsWith(".md"))
-    .sort();
+  const allFiles = await getFileList();
 
   // Check if the query mentions a specific course number
   const courseMatch = query.match(COURSE_NUMBER_RE);
@@ -93,9 +111,7 @@ export async function getContext(
   }
 
   const contents = await Promise.all(
-    filesToLoad.map((name) =>
-      readFile(path.join(CONTENT_DIR, name), "utf8"),
-    ),
+    filesToLoad.map((name) => readFileCached(name)),
   );
 
   const text = filesToLoad
