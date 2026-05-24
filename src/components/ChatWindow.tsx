@@ -79,7 +79,12 @@ export default function ChatWindow({
   const [escalationAnchorIndex, setEscalationAnchorIndex] = useState<
     number | null
   >(null);
-  const showCampusNudge = topic === "core" && campus === null;
+  const [longConvoDismissed, setLongConvoDismissed] = useState(false);
+
+  const showCampusNudge    = topic === "core" && campus === null;
+  const showElectivesNudge = topic === "electives" && campus === null;
+  const showAdminNudge     = topic === "admin";
+  const showLongConvoNudge = messages.length >= 9 && !longConvoDismissed;
 
   useEffect(() => {
     const el = listRef.current;
@@ -169,7 +174,45 @@ export default function ChatWindow({
           style={{ backgroundColor: "#FEF3E7", color: "#7A3E0A" }}
         >
           Tip: select a campus in the sidebar for course-specific answers
-          about UAP 5174 and other core courses.
+          about core courses.
+        </div>
+      )}
+
+      {showElectivesNudge && (
+        <div
+          className="px-6 py-2 text-xs border-t border-zinc-200"
+          style={{ backgroundColor: "#FEF3E7", color: "#7A3E0A" }}
+        >
+          Tip: some electives are campus-specific — select a campus for
+          accurate availability.
+        </div>
+      )}
+
+      {showAdminNudge && (
+        <div
+          className="px-6 py-2 text-xs border-t border-zinc-200"
+          style={{ backgroundColor: "#EFF6FF", color: "#1E40AF" }}
+        >
+          Jane routes to the right person — she doesn&apos;t have access to
+          live systems like Banner or your student record.
+        </div>
+      )}
+
+      {showLongConvoNudge && (
+        <div
+          className="flex items-center justify-between px-6 py-2 text-xs border-t border-zinc-200"
+          style={{ backgroundColor: "#F0FDF4", color: "#166534" }}
+        >
+          <span>
+            Starting a new topic? A fresh conversation gives Jane a clean slate.
+          </span>
+          <button
+            type="button"
+            onClick={() => setLongConvoDismissed(true)}
+            className="ml-4 font-medium underline opacity-70 hover:opacity-100 transition-opacity"
+          >
+            Dismiss
+          </button>
         </div>
       )}
 
