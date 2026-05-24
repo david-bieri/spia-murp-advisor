@@ -71,11 +71,11 @@ test.describe("1. Load and opening state", () => {
 
   test("starter prompt chips are visible", async ({ page }) => {
     // All chips must be attached to DOM
+    // rounded-full targets chips only — sidebar buttons use rounded-md
     const chipLabels = ["Course sequence", "Certificate options", "Thesis methods", "UAP 5174 policy"];
     for (const label of chipLabels) {
-      const chip = page.locator("button", { hasText: label });
+      const chip = page.locator("button.rounded-full", { hasText: label });
       await expect(chip).toBeAttached({ timeout: TIMEOUT_UI });
-      // Scroll into view before checking visibility (chips may be below fold)
       await chip.scrollIntoViewIfNeeded();
       await expect(chip).toBeVisible({ timeout: TIMEOUT_UI });
     }
