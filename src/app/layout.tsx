@@ -11,7 +11,7 @@ const crimsonText = Crimson_Text({
 });
 
 export const metadata: Metadata = {
-  title: "SPIA MURP Advisor",
+  title: "Jane — MURP Advising, Virginia Tech SPIA",
   description:
     "Departmental AI assistant for the Master of Urban and Regional Planning program at Virginia Tech's School of Public and International Affairs.",
 };
