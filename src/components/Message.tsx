@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 export type Role = "user" | "assistant";
 
@@ -91,8 +92,74 @@ function Sources({ sources }: { sources: string[] }) {
   );
 }
 
+function ThumbsUpIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M7 10v12" />
+      <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+    </svg>
+  );
+}
+
+function ThumbsDownIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M17 14V2" />
+      <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </svg>
+  );
+}
+
 export default function Message({ message, onFeedback }: MessageProps) {
+  const [thumbsUpSent, setThumbsUpSent] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
 
   if (message.role === "user") {
     return (
@@ -107,6 +174,40 @@ export default function Message({ message, onFeedback }: MessageProps) {
     );
   }
 
+  const showActions = onFeedback !== undefined;
+
+  function handleThumbsUp() {
+    if (thumbsUpSent) return;
+    console.log("feedback:thumbs-up", message);
+    setThumbsUpSent(true);
+  }
+
+  function handleThumbsDown() {
+    if (feedbackSent) return;
+    console.log("feedback:thumbs-down", message);
+    setFeedbackSent(true);
+    onFeedback?.();
+  }
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(message.content);
+      setCopied(true);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable (insecure context, denied permission) — silent fail.
+    }
+  }
+
+  const confirmationText = copied
+    ? "Copied!"
+    : feedbackSent
+    ? "Thanks — flagged for review"
+    : thumbsUpSent
+    ? "Thanks!"
+    : null;
+
   return (
     <div className="flex items-start gap-3">
       <div
@@ -117,25 +218,109 @@ export default function Message({ message, onFeedback }: MessageProps) {
         VT
       </div>
       <div className="flex flex-col gap-1 max-w-[80%]">
-        <div className="rounded-2xl rounded-tl-sm bg-zinc-100 px-4 py-3 text-zinc-900 whitespace-pre-wrap leading-relaxed shadow-sm">
-          {message.content}
+        <div className="rounded-2xl rounded-tl-sm bg-zinc-100 px-4 py-3 text-zinc-900 leading-relaxed shadow-sm prose prose-sm prose-zinc max-w-none">
+          <ReactMarkdown
+            components={{
+              h2: ({ children }) => (
+                <h2 className="text-sm font-semibold text-zinc-900 mt-3 mb-1">
+                  {children}
+                </h2>
+              ),
+              h3: ({ children }) => (
+                <h3 className="text-sm font-semibold text-zinc-700 mt-2 mb-1">
+                  {children}
+                </h3>
+              ),
+              p: ({ children }) => (
+                <p className="mb-2 last:mb-0">{children}</p>
+              ),
+              strong: ({ children }) => (
+                <strong className="font-semibold text-zinc-900">
+                  {children}
+                </strong>
+              ),
+              ul: ({ children }) => (
+                <ul className="list-disc list-inside mb-2 space-y-0.5">
+                  {children}
+                </ul>
+              ),
+              ol: ({ children }) => (
+                <ol className="list-decimal list-inside mb-2 space-y-0.5">
+                  {children}
+                </ol>
+              ),
+              table: ({ children }) => (
+                <div className="overflow-x-auto my-2">
+                  <table className="text-xs border-collapse w-full">
+                    {children}
+                  </table>
+                </div>
+              ),
+              th: ({ children }) => (
+                <th className="border border-zinc-300 px-2 py-1 bg-zinc-200 font-semibold text-left">
+                  {children}
+                </th>
+              ),
+              td: ({ children }) => (
+                <td className="border border-zinc-300 px-2 py-1">{children}</td>
+              ),
+              hr: () => <hr className="border-zinc-200 my-2" />,
+              a: ({ href, children }) => (
+                <a
+                  href={href}
+                  className="text-[#861F41] underline hover:opacity-75"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {children}
+                </a>
+              ),
+            }}
+          >
+            {message.content}
+          </ReactMarkdown>
         </div>
         {message.sources && message.sources.length > 0 && (
           <Sources sources={message.sources} />
         )}
-        <button
-          type="button"
-          onClick={() => {
-            console.log("feedback:thumbs-down", message);
-            setFeedbackSent(true);
-            onFeedback?.();
-          }}
-          disabled={feedbackSent}
-          className="self-start text-xs text-zinc-400 hover:text-[#861F41] disabled:text-zinc-300 transition-colors"
-          aria-label="Report this answer as unhelpful"
-        >
-          {feedbackSent ? "Thanks — flagged for review" : "Not helpful"}
-        </button>
+        {showActions && (
+          <div className="self-start flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleThumbsUp}
+              disabled={thumbsUpSent}
+              className="text-zinc-400 hover:text-[#861F41] disabled:text-zinc-300 transition-colors p-1 rounded"
+              aria-label="Mark this answer as helpful"
+              title="Helpful"
+            >
+              <ThumbsUpIcon />
+            </button>
+            <button
+              type="button"
+              onClick={handleThumbsDown}
+              disabled={feedbackSent}
+              className="text-zinc-400 hover:text-[#861F41] disabled:text-zinc-300 transition-colors p-1 rounded"
+              aria-label="Report this answer as unhelpful"
+              title="Not helpful"
+            >
+              <ThumbsDownIcon />
+            </button>
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="text-zinc-400 hover:text-[#861F41] transition-colors p-1 rounded"
+              aria-label="Copy message to clipboard"
+              title="Copy"
+            >
+              <CopyIcon />
+            </button>
+            {confirmationText && (
+              <span className="ml-1 text-[11px] text-zinc-400">
+                {confirmationText}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
