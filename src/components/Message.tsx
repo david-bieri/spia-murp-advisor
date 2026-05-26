@@ -6,6 +6,8 @@ import remarkGfm from "remark-gfm";
 
 export type Role = "user" | "assistant";
 
+export type Campus = "Blacksburg" | "Arlington" | null;
+
 export interface MessageData {
   role: Role;
   content: string;
@@ -15,7 +17,12 @@ export interface MessageData {
 
 interface MessageProps {
   message: MessageData;
-  onFeedback?: () => void;
+  isStreaming?: boolean;       // true while this message is being streamed
+  isLastMessage?: boolean;     // true if this is the last message in the list
+  campus?: Campus;             // current campus context
+  onSendPrompt?: (text: string) => void; // send a follow-up prompt
+  onThumbsDown?: () => void;   // primary feedback callback (Phase 3)
+  onFeedback?: () => void;     // legacy alias — use onThumbsDown going forward
 }
 
 const CAMPUS_PREFIX = /^\[Campus:\s+(Blacksburg|Arlington)\]\s+/;
@@ -40,10 +47,15 @@ function formatSource(filename: string): string {
     return "Thesis: " + parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
   }
   if (base.startsWith("murp_rubric_")) return "MURP Thesis Rubric";
+  if (base.startsWith("murp_timetable_")) return "Timetable";
   if (base === "murp_curriculum") return "MURP Curriculum";
   if (base === "murp_course_sequence") return "Course Sequence";
   if (base === "murp_certificates_detail") return "Certificates";
   if (base === "murp_electives") return "Electives Catalog";
+  if (base === "murp_prerequisites") return "Prerequisites";
+  if (base === "murp_deadlines") return "Deadlines";
+  if (base === "murp_funding") return "Funding";
+  if (base === "murp_sample_paths") return "Sample Paths";
   if (base === "murp_4plus1") return "4+1 Pathway";
   if (base === "murp_student_life") return "Student Life";
   if (base === "murp_faculty_research") return "Faculty Research";
@@ -150,11 +162,22 @@ function CopyIcon() {
   );
 }
 
-export default function Message({ message, onFeedback }: MessageProps) {
+export default function Message({
+  message,
+  isStreaming,
+  isLastMessage,
+  campus,
+  onSendPrompt,
+  onThumbsDown,
+  onFeedback,
+}: MessageProps) {
   const [thumbsUpSent, setThumbsUpSent] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [copied, setCopied] = useState(false);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Resolve feedback handler — onThumbsDown takes precedence over legacy onFeedback
+  const handleFeedbackCallback = onThumbsDown ?? onFeedback;
 
   useEffect(() => {
     return () => {
@@ -175,7 +198,7 @@ export default function Message({ message, onFeedback }: MessageProps) {
     );
   }
 
-  const showActions = onFeedback !== undefined;
+  const showActions = handleFeedbackCallback !== undefined;
 
   function handleThumbsUp() {
     if (thumbsUpSent) return;
@@ -187,7 +210,7 @@ export default function Message({ message, onFeedback }: MessageProps) {
     if (feedbackSent) return;
     console.log("feedback:thumbs-down", message);
     setFeedbackSent(true);
-    onFeedback?.();
+    handleFeedbackCallback?.();
   }
 
   async function handleCopy() {
@@ -197,7 +220,7 @@ export default function Message({ message, onFeedback }: MessageProps) {
       if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
       copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard API unavailable (insecure context, denied permission) — silent fail.
+      // Clipboard API unavailable — silent fail.
     }
   }
 
