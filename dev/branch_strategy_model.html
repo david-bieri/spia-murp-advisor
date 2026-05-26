@@ -1,0 +1,120 @@
+
+<style>
+.model { font-family: var(--font-sans); padding: 0.5rem 0 2rem; }
+.rule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+.rule {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 14px 16px;
+}
+.rule-label {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px;
+}
+.rule-label.main-color { color: #3B6D11; }
+.rule-label.dev-color  { color: #185FA5; }
+.rule-text { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+.rule-text li { margin: 3px 0; list-style: none; padding-left: 14px; position: relative; }
+.rule-text li::before { content: '—'; position: absolute; left: 0; color: var(--color-text-secondary); }
+
+.timeline { position: relative; margin: 1.5rem 0; }
+.tl-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 8px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .06em; }
+.tl-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.tl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.tl-dot.main-dot { background: #3B6D11; }
+.tl-dot.dev-dot  { background: #185FA5; }
+.tl-dot.merge-dot { background: #854F0B; }
+.tl-content { flex: 1; }
+.tl-step { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+.tl-detail { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; line-height: 1.5; }
+
+.signal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.signal {
+  border-radius: var(--border-radius-md);
+  padding: 10px 12px; font-size: 12px;
+}
+.signal.go { background: #EAF3DE; color: #3B6D11; border: 0.5px solid #C0DD97; }
+.signal.wait { background: #FCEBEB; color: #A32D2D; border: 0.5px solid #F7C1C1; }
+.signal-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.signal-text { line-height: 1.5; }
+
+.section-hdr {
+  font-size: 11px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--color-text-secondary); margin: 1.5rem 0 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-hdr::after { content:''; flex:1; height:0.5px; background: var(--color-border-tertiary); }
+</style>
+
+<div class="model">
+
+<div class="section-hdr">What each branch is for</div>
+<div class="rule-grid">
+  <div class="rule">
+    <div class="rule-label main-color">main — the promise</div>
+    <ul class="rule-text">
+      <li>Lives at spia-murp-advisor.vercel.app</li>
+      <li>Colleagues and students rely on this URL</li>
+      <li>Every commit must leave Jane working</li>
+      <li>New content and inert code: welcome</li>
+      <li>Replacements to working files: only when tested</li>
+    </ul>
+  </div>
+  <div class="rule">
+    <div class="rule-label dev-color">develop — the sandbox</div>
+    <ul class="rule-text">
+      <li>Lives at a Vercel preview URL (yours alone)</li>
+      <li>You can break things here — that's the point</li>
+      <li>Where knowledge.ts and route.ts get tested</li>
+      <li>Merges to main only when all tests pass</li>
+      <li>Each merge = one clean commit on main</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section-hdr">Sequence for Phase 3</div>
+<div class="timeline">
+  <div class="tl-row">
+    <div class="tl-dot main-dot"></div>
+    <div class="tl-content">
+      <div class="tl-step">Commit 1 to main — docs, KB, inert files</div>
+      <div class="tl-detail">14 files. Jane answers better. Colleagues notice improvement. Nothing can break because nothing existing changed.</div>
+    </div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-dot main-dot"></div>
+    <div class="tl-content">
+      <div class="tl-step">Commit 2 to main — component group + Message.tsx</div>
+      <div class="tl-detail">6 files. Components exist in the bundle but are dormant. Jane's responses look identical to before.</div>
+    </div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-dot dev-dot"></div>
+    <div class="tl-content">
+      <div class="tl-step">Create develop — add knowledge.ts and route.ts</div>
+      <div class="tl-detail">2 files. The activation switches. Test streaming, test degree map, test audit on the preview URL. Run Playwright.</div>
+    </div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-dot merge-dot"></div>
+    <div class="tl-content">
+      <div class="tl-step">Merge develop → main when all tests pass</div>
+      <div class="tl-detail">One clean merge commit. The dormant components wake up. Jane gains the degree map and audit features.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section-hdr">Merge checklist — ready or not?</div>
+<div class="signal-grid">
+  <div class="signal go">
+    <div class="signal-label">Merge when</div>
+    <div class="signal-text">Playwright passes on develop<br>Degree map tested on mobile + desktop<br>Cold start under 8 seconds<br>Colleague feedback received on main<br>No unexplained diffs</div>
+  </div>
+  <div class="signal wait">
+    <div class="signal-label">Wait when</div>
+    <div class="signal-text">Any Playwright test failing<br>Streaming hung or timing out<br>Cards not rendering from JSON<br>knowledge.ts producing empty context<br>Unexplained changes in git diff</div>
+  </div>
+</div>
+
+</div>
