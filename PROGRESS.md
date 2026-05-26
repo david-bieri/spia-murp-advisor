@@ -4,10 +4,10 @@
 
 ## Current status
 
-**Phase 2 complete. Phase 3 in progress on `develop` branch.**
+**Phase 2 complete. Phase 3 Sprint 2b complete on `develop` branch.**
 
 - Live URL: spia-murp-advisor.vercel.app (main = e841dc5)
-- Develop branch: created off e841dc5 for Phase 3 work
+- Develop branch: active Phase 3 work
 - Colleague share: pending Phase 2 completion items below
 
 ---
@@ -86,26 +86,38 @@
 
 ### Pre-conditions
 - [ ] git reset --hard origin/main (sync local to e841dc5)
-- [ ] git checkout -b develop && git push -u origin develop
+- [x] git checkout -b develop && git push -u origin develop
 - [ ] Verify `topic` in POST body in page.tsx → route.ts
 - [ ] Word count audit (target <90K words before new KB)
 - [ ] Confirm remark-gfm in package.json
 
 ### Sprint 1 — New KB files (`develop`, Days 1–2)
-- [ ] src/content/murp_prerequisites.md
+- [x] src/content/murp_prerequisites.md
+- [x] src/content/murp_deadlines.md
+- [x] src/content/murp_timetable_f26.md  (Banner scraper, Fall 2026 — ADR-025)
 - [ ] src/content/murp_sample_paths.md
-- [ ] src/content/murp_deadlines.md
 - [ ] src/content/murp_funding.md
-- [ ] DECISIONS.md: add ADR-022, ADR-023, ADR-024
+- [x] DECISIONS.md: ADR-022, ADR-023, ADR-024 added
+- [x] DECISIONS.md: ADR-025, ADR-026 added (timetable + scheduling features)
 
-### Sprint 2 — Hook + knowledge layer (`develop`, Days 3–4)
+### Sprint 2 — Knowledge layer (`develop`, Days 3–4)
+- [x] src/lib/knowledge.ts: timetable integration complete
+  - [x] `isTimetable()` predicate — murp_timetable_* excluded from isBase()
+  - [x] `SCHEDULE_RE` intent regex (availability, offered, time-block, waitlist patterns)
+  - [x] Timetable loaded for core / electives / certificates topics
+  - [x] Timetable loaded on SCHEDULE_RE intent (base + timetable only, no syllabi)
+  - [x] Timetable loaded alongside course files on course-number match
 - [ ] src/hooks/useAcademicAdvisor.ts (types + metrics; no moveCourse)
-- [ ] src/lib/knowledge.ts: extend getContext(query, topic?)
-  - [ ] Add intent-detection regexes (8 patterns)
-  - [ ] Add supplementary file loading (exists-check before include)
-  - [ ] Preserve { text, sources } return type (ADR-001/010)
-- [ ] Populate `sources` field in getContext() return — surface which .md file(s)
-      answered each query (signature already supports it; implementation pending)
+- [ ] Populate `sources` field in getContext() return
+- [ ] Word count re-audit after new KB files
+
+### Sprint 2b — Scheduling features (`develop`) ✅
+- [x] src/lib/systemPrompt.ts: `## SCHEDULING AND COURSE AVAILABILITY` section added
+  - [x] Dual-section awareness (surface parallel F2F + online sections)
+  - [x] Time-block matching (filter timetable by student's available days/times)
+  - [x] Waitlist fallback (three-step fallback when a section is full)
+  - [x] Eligibility filter (completed courses → prereq check → timetable filter)
+  - [x] Concentration completion checker (remaining elective gaps → live timetable)
 
 ### Sprint 3 — Streaming + structured output (`develop`, Days 5–9)
 - [ ] src/lib/useStreamingChat.ts
@@ -143,6 +155,21 @@
 
 ---
 
+## Semester refresh workflow (timetable)
+
+Run at the start of each Fall and Spring semester:
+
+```powershell
+python vt_timetable_scraper.py --term YYYYMM --format md --out src/content/murp_timetable_XXX.md
+git add src/content/murp_timetable_XXX.md
+git commit -m "content: timetable refresh [term]"
+git push
+```
+
+Term codes: `YYYY01` = Spring · `YYYY06` = Summer · `YYYY09` = Fall
+
+---
+
 ## Performance optimization sequence
 
 The sequence below is intentional — do not skip ahead to RAG.
@@ -150,15 +177,17 @@ The sequence below is intentional — do not skip ahead to RAG.
 1. **Measure** — word count audit now: `Get-ChildItem src\content -Filter *.md | Get-Content | Measure-Object -Word`. Target: <90K words.
 2. **Topic-based filtering** (Sprint 2) — `getContext(query, topic?)` loads only files matching the active topic. Cuts context 60–70% without retrieval complexity.
 3. **File-level metadata filtering** (Phase 3 midpoint) — frontmatter tags (`topic`, `campus`, `course`, `modality`) enable granular per-file filtering.
-4. **RAG** (Phase 4 only, if needed) — deferred until multi-program scope makes even filtered context too large, or sub-document retrieval within long thesis files becomes necessary. RAG introduces retrieval failure modes that are not justified until topic filtering is proven insufficient.
+4. **RAG** (Phase 4 only, if needed) — deferred until multi-program scope makes even filtered context too large, or sub-document retrieval within long thesis files becomes necessary.
 
 ---
 
 ## Phase 4 queue (not in scope for Phase 3)
 
+- Schedule builder (conversational schedule → single-semester DegreePlanCard)
 - `moveCourse` drag-and-drop (needs @dnd-kit/core)
 - PDF export for degree plan (@react-pdf/renderer)
 - Feedback persistence (Vercel KV) — before wider student exposure
+- Peer schedule previewer (requires murp_sample_paths.md content + degree map)
 - Faculty research profiles in murp_faculty_research.md (fill real names)
 - MPIA content expansion (CIP 45.0901 context — see ADR-012)
 - ASPECT PhD absorption (CLAHS 2030 closure; ~33 doctoral students)
@@ -173,7 +202,9 @@ The sequence below is intentional — do not skip ahead to RAG.
 |---|---|---|
 | Vercel Hobby 10s timeout | Watch | Test plan generation cold start; upgrade to Pro if >8s |
 | Playwright count in check_repo.ps1 | Action needed | Update after each Sprint adding tests |
-| remark-gfm v3 pipe tables (ADR-020 superseded) | Write ADR-022 | Remove no-tables rule from system-prompt.ts |
+| remark-gfm v3 pipe tables (ADR-020 superseded) | Resolved | No-tables rule confirmed absent from systemPrompt.ts |
 | GEOG 5314 listed twice, different titles | Unresolved | Confirm correct course with Geography dept before Phase 3 KB ingestion |
 | NR 5884 listed twice, different courses | Unresolved | Confirm course numbers with NR dept before Phase 3 KB ingestion |
 | Kelly Crist cert split | Email not sent | Clarify Gilmore/Crist responsibility split for certificate programs |
+| murp_sample_paths.md | Not started | Content work required before peer schedule previewer |
+| murp_funding.md | Not started | Required for funding intent queries in Sprint 2 |

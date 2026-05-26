@@ -57,11 +57,10 @@ assembles them dynamically via `readdir`. No hardcoded file list required.
 **Rationale:** New KB files are committed without code changes. Syllabi pipeline output
 drops directly into `src/content/`.
 
-## ADR-010 — `system-prompt.ts` separate from knowledge layer
+## ADR-010 — `systemPrompt.ts` separate from knowledge layer
 **Status:** Accepted  
-**Decision:** `src/lib/system-prompt.ts` (hyphenated filename) exports
-`buildSystemPrompt(context: string): string`. Knowledge assembly and prompt engineering
-are separate concerns.  
+**Decision:** `src/lib/systemPrompt.ts` exports `buildSystemPrompt(context: string): string`.
+Knowledge assembly and prompt engineering are separate concerns.  
 **Rationale:** Prompt changes don't require touching knowledge retrieval logic.
 
 ## ADR-011 — Five-topic sidebar
@@ -120,7 +119,7 @@ and unnecessary. RAG deferred until topic filtering proves insufficient.
 **Decision:** `test/jane.spec.ts` mocks all API responses. Content accuracy tested
 manually. Automated tests cover UI behaviour only.  
 **Rationale:** Prevents test flakiness from LLM non-determinism. Keeps CI fast.
-Expected test count tracked in `check_repo.ps1` — update count after each sprint.
+Expected test count tracked in `check_repo.ps1` — update count after each Sprint.
 
 ## ADR-019 — Three-icon feedback UX
 **Status:** Accepted  
@@ -147,12 +146,11 @@ the correct sequence derived from `murp_course_sequence.md`.
 ## ADR-022 — Pipe tables now supported (supersedes ADR-020)
 **Status:** Accepted  
 **Decision:** `remark-gfm ^3` confirmed installed (package.json). Pipe tables render
-correctly in `react-markdown`. Remove the `#Formatting` no-tables rule from
-`src/lib/system-prompt.ts`. KB files may use pipe tables.  
+correctly in `react-markdown`. No-tables rule removed from `src/lib/systemPrompt.ts`.
+KB files may use pipe tables.  
 **Rationale:** remark-gfm v3 added in Phase 2 (commit 6f94e56). ADR-020 constraint
-no longer applies.  
-**Action:** Remove "avoid pipe tables, use lists instead" from system-prompt.ts
-`#Formatting` section.
+no longer applies. Confirmed resolved — no-tables rule was absent from systemPrompt.ts
+at time of Phase 3 Sprint 2b review.
 
 ## ADR-023 — Mode detection in route.ts, not knowledge layer
 **Status:** Accepted  
@@ -176,3 +174,36 @@ context; chat layer decides how to use it. Mode detection is a chat-layer concer
 While structured output is generating, display `__BUILDING_PLAN__` placeholder.  
 **Rationale:** Degree map grid is unreadable inside a constrained chat bubble. Funding
 and thesis answers are naturally list-shaped and work as prose with light styling.
+
+## ADR-025 — Timetable as semester-refresh KB file
+**Status:** Accepted  
+**Decision:** Live VT timetable data is scraped once per semester via
+`vt_timetable_scraper.py` and committed as `src/content/murp_timetable_*.md`
+(e.g. `murp_timetable_fall2026.md`). The file is excluded from `isBase()` in
+`knowledge.ts` to avoid loading ~8K tokens on every query, and is loaded only when:
+(a) `SCHEDULE_RE` intent regex matches; (b) topic is `core`, `electives`, or
+`certificates`; or (c) a specific course number appears in the query.
+Campus is derived from Banner building codes: NOVAC/NVC/VTRCA → Arlington/NCR;
+ONLINE → Online; all other codes → Blacksburg. Undergraduate courses (below 5000-level)
+and ARR/TBA placeholder rows are filtered at parse time; ARR sections are collapsed
+to a per-title summary count in the markdown output.  
+**Rationale:** Live schedule data has a fundamentally different decay rate from
+evergreen KB content. Opt-in loading prevents token overhead on unrelated queries.
+Banner building codes provide reliable campus disambiguation without a separate API.
+The scraper is reproducible and semester-refresh is a single command.
+
+## ADR-026 — Scheduling features as system-prompt instructions
+**Status:** Accepted  
+**Decision:** Five scheduling features are implemented as a new `## SCHEDULING AND
+COURSE AVAILABILITY` section in `src/lib/systemPrompt.ts`, inserted between
+`## CAMPUS DISAMBIGUATION` and `## ESCALATION`. The five features are:
+dual-section awareness (surface parallel F2F + online sections); time-block matching
+(filter timetable by student's available days/times); waitlist fallback (structured
+three-step fallback when a section is full); eligibility filter (cross-reference
+completed courses against prereqs then timetable); concentration completion checker
+(map remaining elective gaps to live timetable). No new React components or route
+changes required. All features rely on `murp_timetable_*.md`, `murp_prerequisites.md`,
+and `murp_electives.md` already loaded for the relevant topics.  
+**Rationale:** These features are prompt-engineering improvements, not UI features.
+Keeping them in `systemPrompt.ts` preserves the ADR-001 interface contract and avoids
+component proliferation ahead of Phase 3 structured output work.
