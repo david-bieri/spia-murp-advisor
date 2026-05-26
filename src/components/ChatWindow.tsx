@@ -8,8 +8,10 @@ import {
   useRef,
   useState,
 } from "react";
-import Message, { MessageData } from "./Message";
+import { Message } from "./Message";                          // named export (was default)
+import type { MessageData } from "./Message";                 // type-only import
 import { StarterPrompts } from "./StarterPrompts";
+import { BUILDING_PLAN_SENTINEL } from "@/lib/useStreamingChat"; // sentinel string
 import type { Campus, Topic } from "./Sidebar";
 
 interface ChatWindowProps {
@@ -31,16 +33,17 @@ const ESCALATION_MESSAGE: MessageData = {
 };
 
 function scopeLabel(topic: Topic, campus: Campus): string {
-  if (topic === "program") return "MURP Program";
-  if (topic === "admin") return "Contacts & Admin";
-  if (topic === "electives") return "Electives";
+  if (topic === "program")      return "MURP Program";
+  if (topic === "admin")        return "Contacts & Admin";
+  if (topic === "electives")    return "Electives";
   if (topic === "certificates") return "Certificates";
-  // core — campus-aware
-  if (campus === "blacksburg") return "Core · Blacksburg";
-  if (campus === "arlington") return "Core · Arlington";
+  if (campus === "blacksburg")  return "Core · Blacksburg";
+  if (campus === "arlington")   return "Core · Arlington";
   return "Core Courses";
 }
 
+// Shown only while waiting for the very first streaming token —
+// i.e. isLoading is true but the placeholder message hasn't appeared yet.
 function TypingIndicator() {
   return (
     <div className="flex items-start gap-3">
@@ -66,6 +69,29 @@ function TypingIndicator() {
   );
 }
 
+// "Building your plan..." shown while DEGREE_PLAN JSON streams in
+function BuildingPlanIndicator() {
+  return (
+    <div className="flex items-start gap-3">
+      <div
+        className="mt-1 flex h-8 w-8 flex-none items-center justify-center rounded-full text-white font-semibold text-xs"
+        style={{ backgroundColor: "#861F41" }}
+        aria-hidden
+      >
+        VT
+      </div>
+      <div
+        className="rounded-2xl rounded-tl-sm bg-zinc-100 px-4 py-3 shadow-sm text-sm text-zinc-500"
+        role="status"
+        aria-label="Building degree plan"
+      >
+        Building your plan…
+        <span className="inline-block w-0.5 h-3.5 ml-1 bg-zinc-400 align-text-bottom animate-[jane-blink_0.7s_step-end_infinite]" />
+      </div>
+    </div>
+  );
+}
+
 export default function ChatWindow({
   messages,
   isLoading,
@@ -86,13 +112,27 @@ export default function ChatWindow({
   const showAdminNudge     = topic === "admin";
   const showLongConvoNudge = messages.length >= 9 && !longConvoDismissed;
 
+  // True when streaming has started — last message is a partial assistant turn
+  const lastMessage = messages[messages.length - 1];
+  const isStreamingNow =
+    isLoading &&
+    lastMessage?.role === "assistant";
+
+  // Show TypingIndicator only before the first token arrives
+  const showTypingIndicator =
+    isLoading && lastMessage?.role === "user";
+
+  // Show BuildingPlanIndicator instead of TypingIndicator for structured output
+  const showBuildingPlan =
+    isStreamingNow && lastMessage?.content === BUILDING_PLAN_SENTINEL;
+
   useEffect(() => {
     const el = listRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [messages, isLoading, escalationAnchorIndex]);
 
-  function handleFeedback(index: number) {
+  function handleThumbsDown(index: number) {
     setEscalationAnchorIndex((prev) => (prev === null ? index : prev));
   }
 
@@ -152,25 +192,46 @@ export default function ChatWindow({
             </div>
           </div>
         )}
-        {messages.map((m, i) => (
-          <Fragment key={i}>
-            <Message
-              message={m}
-              onFeedback={
-                m.role === "assistant" ? () => handleFeedback(i) : undefined
-              }
-            />
-            {i === 0 && messages.length === 1 && (
-              <StarterPrompts onSelect={(prompt) => onSend(prompt)} />
-            )}
-            {escalationAnchorIndex === i && (
-              <Message message={ESCALATION_MESSAGE} />
-            )}
-          </Fragment>
-        ))}
-        {isLoading && <TypingIndicator />}
+        {messages.length === 1 && !isLoading && (
+          <StarterPrompts onSelect={(prompt) => onSend(prompt)} />
+        )}
+
+        {messages.map((m, i) => {
+          // Skip the sentinel — BuildingPlanIndicator renders below instead
+          if (m.content === BUILDING_PLAN_SENTINEL) return null;
+
+          const isLast = i === messages.length - 1;
+
+          return (
+            <Fragment key={i}>
+              <Message
+                message={m}
+                isStreaming={isLast && isStreamingNow}
+                isLastMessage={isLast}
+                campus={campus}
+                onSendPrompt={(text) => onSend(text)}
+                onThumbsDown={
+                  m.role === "assistant"
+                    ? () => handleThumbsDown(i)
+                    : undefined
+                }
+              />
+              {escalationAnchorIndex === i && (
+                <Message
+                  message={ESCALATION_MESSAGE}
+                  campus={campus}
+                  onSendPrompt={(text) => onSend(text)}
+                />
+              )}
+            </Fragment>
+          );
+        })}
+
+        {showBuildingPlan    && <BuildingPlanIndicator />}
+        {showTypingIndicator && <TypingIndicator />}
       </div>
 
+      {/* ── Nudges ── */}
       {showCampusNudge && (
         <div
           className="px-6 py-2 text-xs border-t border-zinc-200"
@@ -180,7 +241,6 @@ export default function ChatWindow({
           about core courses.
         </div>
       )}
-
       {showElectivesNudge && (
         <div
           className="px-6 py-2 text-xs border-t border-zinc-200"
@@ -190,7 +250,6 @@ export default function ChatWindow({
           accurate availability.
         </div>
       )}
-
       {showAdminNudge && (
         <div
           className="px-6 py-2 text-xs border-t border-zinc-200"
@@ -200,7 +259,6 @@ export default function ChatWindow({
           live systems like Banner or your student record.
         </div>
       )}
-
       {showLongConvoNudge && (
         <div
           className="flex items-center justify-between px-6 py-2 text-xs border-t border-zinc-200"
