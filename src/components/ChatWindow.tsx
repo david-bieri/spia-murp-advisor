@@ -132,8 +132,23 @@ export default function ChatWindow({
     el.scrollTop = el.scrollHeight;
   }, [messages, isLoading, escalationAnchorIndex]);
 
+  function handleThumbsUp(index: number) {
+    // Fire-and-forget — feedback failure never surfaces to the user
+    fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messageIndex: index, type: "up" }),
+    }).catch(() => {});
+  }
+
   function handleThumbsDown(index: number) {
     setEscalationAnchorIndex((prev) => (prev === null ? index : prev));
+    // Fire-and-forget — feedback failure never surfaces to the user
+    fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messageIndex: index, type: "down" }),
+    }).catch(() => {});
   }
 
   function submit() {
@@ -210,6 +225,11 @@ export default function ChatWindow({
                 isLastMessage={isLast}
                 campus={campus}
                 onSendPrompt={(text) => onSend(text)}
+                onThumbsUp={
+                  m.role === "assistant"
+                    ? () => handleThumbsUp(i)
+                    : undefined
+                }
                 onThumbsDown={
                   m.role === "assistant"
                     ? () => handleThumbsDown(i)

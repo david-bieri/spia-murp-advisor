@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 
 export type Role = "user" | "assistant";
 
-export type Campus = "blacksburg" | "arlington" | null;
+export type Campus = "Blacksburg" | "Arlington" | null;
 
 export interface MessageData {
   role: Role;
@@ -21,7 +21,8 @@ interface MessageProps {
   isLastMessage?: boolean;     // true if this is the last message in the list
   campus?: Campus;             // current campus context
   onSendPrompt?: (text: string) => void; // send a follow-up prompt
-  onThumbsDown?: () => void;   // primary feedback callback (Phase 3)
+  onThumbsUp?: () => void;     // thumbs-up feedback callback
+  onThumbsDown?: () => void;   // thumbs-down feedback callback (Phase 3)
   onFeedback?: () => void;     // legacy alias — use onThumbsDown going forward
 }
 
@@ -168,6 +169,7 @@ export default function Message({
   isLastMessage,
   campus,
   onSendPrompt,
+  onThumbsUp,
   onThumbsDown,
   onFeedback,
 }: MessageProps) {
@@ -202,8 +204,8 @@ export default function Message({
 
   function handleThumbsUp() {
     if (thumbsUpSent) return;
-    console.log("feedback:thumbs-up", message);
     setThumbsUpSent(true);
+    onThumbsUp?.();
   }
 
   function handleThumbsDown() {
