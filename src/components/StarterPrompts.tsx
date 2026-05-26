@@ -5,7 +5,7 @@
 
 interface Props {
   onSelect: (prompt: string) => void;
-  visible: boolean; // true when messages.length === 1 (only opening message present)
+  visible?: boolean; // optional — defaults to true for backward compatibility with existing ChatWindow
 }
 
 // Existing 7 chips (preserved exactly) + 3 new Phase 3 chips
@@ -25,7 +25,7 @@ const CHIPS = [
   { label: "Funding opportunities",   prompt: "What funding, fellowships, and scholarship opportunities are available for MURP students?" },
 ];
 
-export function StarterPrompts({ onSelect, visible }: Props) {
+export function StarterPrompts({ onSelect, visible = true }: Props) {
   if (!visible) return null;
 
   return (
