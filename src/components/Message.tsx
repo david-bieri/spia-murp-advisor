@@ -3,10 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import type { Campus } from "./Sidebar";
 
 export type Role = "user" | "assistant";
-
-export type Campus = "Blacksburg" | "Arlington" | null;
 
 export interface MessageData {
   role: Role;
