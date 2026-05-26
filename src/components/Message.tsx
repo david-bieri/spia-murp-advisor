@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 
 export type Role = "user" | "assistant";
 
-export type Campus = "Blacksburg" | "Arlington" | null;
+export type Campus = "blacksburg" | "arlington" | null;
 
 export interface MessageData {
   role: Role;
