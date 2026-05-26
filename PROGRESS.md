@@ -1,189 +1,210 @@
-# Jane (SPIA MURP Advisor Bot) — Implementation Progress
-
-**Current phase:** Phase 2 complete → Phase 3 beginning
-**Last updated:** 2026-05-23
+# Jane — Progress Tracker
 
 ---
 
-## Phase 1 — Working Prototype ✅ Complete
-*Goal: React artifact with clean two-layer architecture and full knowledge base*
+## Current status
 
-All Phase 1 items complete. See previous PROGRESS versions for full checklist.
-Prototype remains available for demo purposes.
+**Phase 2 complete. Phase 3 Sprint 2b complete on `develop` branch.**
 
----
-
-## Phase 2 — Hosted Web Application ✅ Largely Complete
-*Goal: Next.js app on Vercel with shareable URL*
-
-### Infrastructure
-- [x] GitHub repo created (`spia-murp-advisor`, private)
-- [x] Next.js scaffold with App Router
-- [x] Vercel deployment — auto-deploys on push to `main`
-- [x] API key in environment variable only (never client-side)
-
-### Identity — "Jane"
-- [x] Bot renamed to **Jane** throughout (page title, sidebar, aria labels, escalation copy)
-- [x] System prompt rewritten: identity, scope, campus disambiguation, escalation,
-      confidence, Jacobs, Moses, pearls, tone, what Jane does not do
-- [x] Model updated to `claude-sonnet-4-6`
-- [x] Opening message pre-populated as first assistant turn in messages state
-
-### Personality and Knowledge Layers
-- [x] `jacobs_concepts.md` — synthesised Jane Jacobs knowledge base (ideas, not reproduced text)
-- [x] `planning_pearls.md` — 30 planning wisdom pearls across 8 thematic clusters
-- [x] Jane Jacobs integration in system prompt (one reference per response, not a lecture)
-- [x] Robert Moses humor in system prompt (dry, only for design/theory topics)
-- [x] Planning pearls in system prompt (one in four/five responses, never for logistics)
-
-### UI
-- [x] Sidebar: Campus toggle (Blacksburg / Arlington)
-- [x] Sidebar: Topic tabs restructured — two rows:
-      Row 1: `Program | Admin`
-      Row 2: `Core | Electives | Certificates`
-      (Replaces single `UAP 5174` tab)
-- [x] `StarterPrompts.tsx` component — 6 clickable chips below opening message
-- [x] Campus nudge banner updated for "core" topic (was "uap5174")
-- [x] Escalation text updated to Jane's voice
-- [x] `scopeLabel()` updated for all five topics
-- [x] VT branding throughout (maroon #861F41, orange #E5751F)
-
-### Knowledge Base — Original 11 Files
-- [x] `spia_staff_contacts.md`
-- [x] `murp_curriculum.md`, `murp_electives.md`, `murp_faqs.md`
-- [x] `murp_4plus1.md`, `murp_certificates_detail.md`, `murp_course_sequence.md`
-- [x] `murp_faculty_research.md`, `murp_student_life.md`
-- [x] `uap5174_bieri_s26.md` (Blacksburg), `uap5174_cowell_s24.md` (Arlington)
-
-### Knowledge Base — Syllabi Pipeline
-- [x] `syllabi_to_kb.py` — PDF-to-markdown extraction pipeline
-      Handles: syllabi, MURP theses, rubric documents
-      Extracts: campus, modality, instructor, term, policies, advising notes
-      Detects: Blacksburg vs Arlington/NCR (filename + content + location clues)
-      Detects: In-Person / Hybrid / Online modality
-      Skip logic: CSV-log-based (reliable for multi-syllabus course folders)
-      Filename: `{course}_{campus}_{modality_if_nondefault}_{instructor}_{term}.md`
-- [x] Full UAP, GIA, SPIA course KB generated from syllabi folder
-- [x] MURP thesis KB generated — research scope, methods, curriculum connections
-- [x] Thesis rubric extracted (`murp_rubric_*.md`)
-- [x] Multi-instructor / multi-campus course variants handled as distinct files
-
-### Tested and Working
-- [x] Admissions → Tyler Wiltshire ✅
-- [x] Assistantship → Kelly Crist ✅
-- [x] Arlington admin → Elia Amegashie ✅
-- [x] Travel reimbursement → Shelley Adkins ✅
-- [x] UAP 5174 campus disambiguation triggered ✅
-- [x] Vercel deployment clean (no TypeScript errors) ✅
-
-### Remaining Phase 2 Items (before student exposure)
-- [ ] **Feedback backend** — Vercel KV logging for thumbs-up/down
-      *(deferred from Phase 2 colleague share; required before student exposure)*
-- [ ] **Word count / token audit** — `Get-ChildItem src\content -Filter *.md | Get-Content | Measure-Object -Word`
-      Run before committing full KB; result determines whether topic-based filtering
-      is needed before or after colleague share (threshold: ~90K words)
-- [ ] Remaining browser tests: NR elective OMNR caveat, late policy disambiguation,
-      out-of-scope redirect, AI policy question
-- [ ] Share with Todd Schenk and Dara Wald (colleague share)
+- Live URL: spia-murp-advisor.vercel.app (main = e841dc5)
+- Develop branch: active Phase 3 work
+- Colleague share: pending Phase 2 completion items below
 
 ---
 
-## Phase 3 — Knowledge Base Expansion and Performance
-*Goal: Complete knowledge base, topic-based context filtering, MPIA expansion*
+## Phase 2 checklist
 
-### Immediate Post-Colleague-Share (in order)
-- [ ] **Feedback backend** (Vercel KV) — required before student-facing deployment
-- [ ] **Topic-based context filtering** — `lib/knowledge.ts` loads only files
-      matching active topic (core / electives / certificates / program / admin)
-      rather than all files. Cuts context 60–70% without retrieval complexity.
-      *Trigger: if word count audit shows >90K words, do before colleague share*
-- [ ] **File-level metadata tags** — add frontmatter to each `.md`:
-      `topic`, `campus`, `course`, `modality` for granular filtering
-- [ ] **Faculty research profiles** — `faculty_[lastname].md` per current faculty member
-      covering research interests, advising availability, methodological strengths.
-      Source: spia.vt.edu/faculty or manual write. Critical gap for thesis advising.
-- [ ] **Program-level documents** — `murp_degree_requirements.md`,
-      `murp_graduation_checklist.md`, `murp_admissions.md`, `murp_funding.md`
-- [ ] Update `QUICK_QUESTIONS` in `Sidebar.tsx` once full course KB is reviewed
-      (current entries are generic stubs; replace with actual course names/numbers)
+### Infrastructure ✅
+- [x] Next.js App Router project initialised
+- [x] Vercel deployment linked to GitHub main
+- [x] `ANTHROPIC_API_KEY` in `.env.local`, gitignored
+- [x] TypeScript + Tailwind CSS v4 configured
+- [x] Acherus Grotesque self-hosted fonts
+- [x] Crimson Text + DM Mono via Google Fonts
+- [x] VT favicon.ico
 
-### Program Expansion (Phase 3 proper)
-- [ ] **MPIA** — first expansion priority (enrollment risk + CIP misclassification;
-      frame content around IR identity, not urban studies; see ADR-012)
-- [ ] CPAP PhD
-- [ ] MPA
-- [ ] PGG tracks
+### UI/UX ✅
+- [x] Chat interface with user + assistant bubbles
+- [x] VT maroon/orange colour scheme
+- [x] J avatar (maroon circle)
+- [x] Five-topic sidebar (Program / Admin / Core / Electives / Certs)
+- [x] Campus toggle (Blacksburg / Arlington)
+- [x] Starter prompts — 7 chips, rounded-full, disappear after first message
+- [x] Opening message as pre-populated assistant turn (clientOnly: true)
+- [x] Mobile viewport fix (h-dvh, iOS safe area)
+- [x] 3-icon feedback bar (👍 👎 📋 — thumbs-up, thumbs-down, copy)
+- [x] Thumbs-down escalation (clientOnly message → Todd Schenk / Prof. Bieri)
+- [x] Contextual nudges (amber campus, blue admin, green fresh-chat)
+- [x] Markdown rendering (react-markdown + remark-gfm v3)
 
-### Performance Optimization Sequence
-1. Measure: word count audit (do now)
-2. Topic-based filtering: after colleague share (or before, if >90K words)
-3. File-level metadata filtering: Phase 3 midpoint
-4. **RAG**: only when multi-program scope makes even filtered context too large,
-   or when sub-document retrieval within long thesis files is needed.
-   RAG introduces retrieval failure modes; defer until genuinely required.
-   *Not before MPIA content is in and topic filtering is proven.*
+### Knowledge base ✅
+- [x] spia_staff_contacts.md
+- [x] murp_curriculum.md
+- [x] murp_electives.md
+- [x] murp_faqs.md
+- [x] murp_4plus1.md
+- [x] murp_certificates_detail.md
+- [x] murp_course_sequence.md
+- [x] murp_faculty_research.md
+- [x] murp_student_life.md
+- [x] jacobs_concepts.md
+- [x] planning_pearls.md
+- [x] UAP 5174 Blacksburg + Arlington syllabi KB
+- [x] Full course KB from syllabi_to_kb.py pipeline
+- [x] Thesis KB files (thesis_*.md)
+- [x] Rubric KB files (murp_rubric_*.md)
 
-### Source Display (Phase 3)
-- [ ] Show which `.md` file(s) answered each query
-      `sources` is already in `getContext()` return signature — populate it
+### Jane's personality ✅
+- [x] Jane Jacobs namesake + references
+- [x] Robert Moses dry humour (design topics only)
+- [x] Planning pearls (1 in 4–5 responses)
+- [x] One register shift per response rule
+- [x] Escalation routing to real staff
+
+### Testing ✅
+- [x] Playwright test suite: 33 tests, all mocked, 33/0
+- [x] check_repo.ps1: 69 checks, 0 failures
+- [x] pre_deploy_check.py: all categories pass
+- [x] Mobile viewport testing (iOS Safari, Chrome Android)
+
+### Phase 2 completion items — PENDING (ship on `main`)
+- [ ] Feedback backend (`/api/feedback` route + wire thumbs-up/down stubs)
+- [ ] 4 remaining browser tests:
+  - [ ] NR elective OMNR prefix disambiguation
+  - [ ] Late policy disambiguation across instructors
+  - [ ] Out-of-scope redirect (non-MURP question)
+  - [ ] AI policy question handling
+
+### Colleague share — PENDING (after above)
+- [ ] Share spia-murp-advisor.vercel.app with Todd Schenk (tschenk@vt.edu)
+- [ ] Share with Dara Wald
+- [ ] Distribute Jane_Testing_Protocol_Casual.md
 
 ---
 
-## Phase 4 — Department-Wide Deployment
-*Goal: VT CAS authentication, full program scope*
+## Phase 3 checklist
 
-- [ ] VT IT engagement for CAS/SSO integration
-- [ ] Implement OAuth/CAS authentication in Next.js
-- [ ] Full SPIA program scope with metadata filtering
-- [ ] Document ingestion governance (ownership, update cadence, review process)
-- [ ] ASPECT PhD absorption context (if relevant by Phase 4)
-- [ ] Consider move from Vercel to VT infrastructure for CAS compatibility
+### Pre-conditions
+- [ ] git reset --hard origin/main (sync local to e841dc5)
+- [x] git checkout -b develop && git push -u origin develop
+- [ ] Verify `topic` in POST body in page.tsx → route.ts
+- [ ] Word count audit (target <90K words before new KB)
+- [ ] Confirm remark-gfm in package.json
+
+### Sprint 1 — New KB files (`develop`, Days 1–2)
+- [x] src/content/murp_prerequisites.md
+- [x] src/content/murp_deadlines.md
+- [x] src/content/murp_timetable_f26.md  (Banner scraper, Fall 2026 — ADR-025)
+- [ ] src/content/murp_sample_paths.md
+- [ ] src/content/murp_funding.md
+- [x] DECISIONS.md: ADR-022, ADR-023, ADR-024 added
+- [x] DECISIONS.md: ADR-025, ADR-026 added (timetable + scheduling features)
+
+### Sprint 2 — Knowledge layer (`develop`, Days 3–4)
+- [x] src/lib/knowledge.ts: timetable integration complete
+  - [x] `isTimetable()` predicate — murp_timetable_* excluded from isBase()
+  - [x] `SCHEDULE_RE` intent regex (availability, offered, time-block, waitlist patterns)
+  - [x] Timetable loaded for core / electives / certificates topics
+  - [x] Timetable loaded on SCHEDULE_RE intent (base + timetable only, no syllabi)
+  - [x] Timetable loaded alongside course files on course-number match
+- [ ] src/hooks/useAcademicAdvisor.ts (types + metrics; no moveCourse)
+- [ ] Populate `sources` field in getContext() return
+- [ ] Word count re-audit after new KB files
+
+### Sprint 2b — Scheduling features (`develop`) ✅
+- [x] src/lib/systemPrompt.ts: `## SCHEDULING AND COURSE AVAILABILITY` section added
+  - [x] Dual-section awareness (surface parallel F2F + online sections)
+  - [x] Time-block matching (filter timetable by student's available days/times)
+  - [x] Waitlist fallback (three-step fallback when a section is full)
+  - [x] Eligibility filter (completed courses → prereq check → timetable filter)
+  - [x] Concentration completion checker (remaining elective gaps → live timetable)
+
+### Sprint 3 — Streaming + structured output (`develop`, Days 5–9)
+- [ ] src/lib/useStreamingChat.ts
+  - [ ] isStructuredPending detection (trimStart check)
+  - [ ] __BUILDING_PLAN__ placeholder state
+- [ ] src/components/StreamingCursor.tsx
+- [ ] src/app/globals.css: jane-blink + course chip classes
+- [ ] src/app/api/chat/route.ts
+  - [ ] Streaming (TransformStream bridge)
+  - [ ] Model string: claude-sonnet-4-6
+  - [ ] detectModeAddendum(query, history) → plan + audit JSON schemas
+  - [ ] Campus hint in system prompt
+- [ ] src/hooks/useAcademicAdvisor.ts: add moveCourse stub (Phase 4)
+- [ ] src/components/DegreePlanCard.tsx (shell: renders DesktopGrid or MobileTabs)
+- [ ] src/components/DesktopGrid.tsx (adopted from architecture doc, revised)
+- [ ] src/components/MobileTabs.tsx (tabbed semester view, <640px)
+- [ ] src/components/DegreeAuditCard.tsx
+- [ ] src/components/Message.tsx (JSON detection + __BUILDING_PLAN__ handling)
+- [ ] src/components/StarterPrompts.tsx (10 chips: 7 existing + 3 new)
+- [ ] Cold-start timeout test: degree map plan generation on Vercel preview
+
+### Sprint 4 — Conversational features + tests (`develop`, Days 10–13)
+- [ ] src/components/StructuredCards.tsx (ThesisTopicCard + FundingCard)
+- [ ] Message.tsx: add thesis/funding type guards
+- [ ] Playwright: add degree map tests
+- [ ] Playwright: add audit tests
+- [ ] Playwright: add conflict checker test
+- [ ] Update check_repo.ps1 expected test count
+
+### Merge to main
+- [ ] All Sprint 3 Playwright tests pass
+- [ ] Colleague feedback received on stable main features
+- [ ] Vercel preview URL tested on mobile (iOS Safari)
+- [ ] `git checkout main && git merge develop && git push`
 
 ---
 
-## Phase 5 — Production Hardening
+## Semester refresh workflow (timetable)
 
-- [ ] Query logging (anonymous — what questions are failing?)
-- [ ] Automated testing suite for known queries
-- [ ] Staff contact refresh automation or manual review cadence
-- [ ] Syllabus ingestion trigger (start of each semester — re-run syllabi_to_kb.py)
+Run at the start of each Fall and Spring semester:
+
+```powershell
+python vt_timetable_scraper.py --term YYYYMM --format md --out src/content/murp_timetable_XXX.md
+git add src/content/murp_timetable_XXX.md
+git commit -m "content: timetable refresh [term]"
+git push
+```
+
+Term codes: `YYYY01` = Spring · `YYYY06` = Summer · `YYYY09` = Fall
 
 ---
 
-## Blocked / Waiting
+## Performance optimization sequence
 
-| Item | Blocked on | Owner |
+The sequence below is intentional — do not skip ahead to RAG.
+
+1. **Measure** — word count audit now: `Get-ChildItem src\content -Filter *.md | Get-Content | Measure-Object -Word`. Target: <90K words.
+2. **Topic-based filtering** (Sprint 2) — `getContext(query, topic?)` loads only files matching the active topic. Cuts context 60–70% without retrieval complexity.
+3. **File-level metadata filtering** (Phase 3 midpoint) — frontmatter tags (`topic`, `campus`, `course`, `modality`) enable granular per-file filtering.
+4. **RAG** (Phase 4 only, if needed) — deferred until multi-program scope makes even filtered context too large, or sub-document retrieval within long thesis files becomes necessary.
+
+---
+
+## Phase 4 queue (not in scope for Phase 3)
+
+- Schedule builder (conversational schedule → single-semester DegreePlanCard)
+- `moveCourse` drag-and-drop (needs @dnd-kit/core)
+- PDF export for degree plan (@react-pdf/renderer)
+- Feedback persistence (Vercel KV) — before wider student exposure
+- Peer schedule previewer (requires murp_sample_paths.md content + degree map)
+- Faculty research profiles in murp_faculty_research.md (fill real names)
+- MPIA content expansion (CIP 45.0901 context — see ADR-012)
+- ASPECT PhD absorption (CLAHS 2030 closure; ~33 doctoral students)
+- VT CAS authentication (Phase 5)
+- Vercel Pro upgrade ($20/mo — lifts 10s timeout, enables proper streaming)
+
+---
+
+## Blocked / watch items
+
+| Item | Status | Resolution |
 |---|---|---|
-| Feedback backend | Not blocking colleague share; required before student exposure | David |
-| Word count audit | Run before copying full KB to repo | David |
-| QUICK_QUESTIONS update | Review generated KB files to know actual course inventory | David |
-| Faculty research profiles | Manual write or spia.vt.edu scrape | David |
-| Kelly Crist cert split | Email not yet sent (Gilmore/Crist split) | David |
-| GEOG 5314 duplicate | Confirm two courses with Geography dept | David |
-| NR 5884 duplicate | Confirm course numbers with NR dept | David |
-
----
-
-## Decisions Log Summary
-*(Full records in DECISIONS.md)*
-
-| # | Decision | Date |
-|---|---|---|
-| ADR-001 | Two-layer architecture (knowledge / chat separation) | 2026-05-20 |
-| ADR-002 | Hardcoded stub as Phase 1 retrieval layer | 2026-05-20 |
-| ADR-003 | Deep MURP only through Phase 2 | 2026-05-20 |
-| ADR-004 | Three-tier knowledge hierarchy | 2026-05-20 |
-| ADR-005 | Campus disambiguation — never merge Blacksburg/Arlington | 2026-05-20 |
-| ADR-006 | Strangler Fig pattern | 2026-05-20 |
-| ADR-007 | Dev environment split (WSL/Windows) | 2026-05-20 |
-| ADR-008 | Staff routing as distinct layer | 2026-05-20 |
-| ADR-009 | React artifact → Next.js | 2026-05-20 |
-| ADR-010 | getContext() interface as phase boundary | 2026-05-20 |
-| ADR-011 | REAL 2004 excluded (grad-only scope) | 2026-05-20 |
-| ADR-012 | MPIA shallow Phase 2; MPIA first in Phase 3 | 2026-05-20 |
-| ADR-013 | Elective catalog as Layer 2b | 2026-05-20 |
-| ADR-014 | Jane persona — Jacobs namesake, Moses humor, planning pearls | 2026-05-23 |
-| ADR-015 | Syllabi-to-KB pipeline (syllabi_to_kb.py) | 2026-05-23 |
-| ADR-016 | Topic sidebar restructure (core / electives / certificates) | 2026-05-23 |
-| ADR-017 | Performance optimization sequence (measure → filter → RAG) | 2026-05-23 |
-| ADR-018 | Opening message as pre-populated assistant turn | 2026-05-23 |
+| Vercel Hobby 10s timeout | Watch | Test plan generation cold start; upgrade to Pro if >8s |
+| Playwright count in check_repo.ps1 | Action needed | Update after each Sprint adding tests |
+| remark-gfm v3 pipe tables (ADR-020 superseded) | Resolved | No-tables rule confirmed absent from systemPrompt.ts |
+| GEOG 5314 listed twice, different titles | Unresolved | Confirm correct course with Geography dept before Phase 3 KB ingestion |
+| NR 5884 listed twice, different courses | Unresolved | Confirm course numbers with NR dept before Phase 3 KB ingestion |
+| Kelly Crist cert split | Email not sent | Clarify Gilmore/Crist responsibility split for certificate programs |
+| murp_sample_paths.md | Not started | Content work required before peer schedule previewer |
+| murp_funding.md | Not started | Required for funding intent queries in Sprint 2 |

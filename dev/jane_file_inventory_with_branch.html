@@ -1,0 +1,216 @@
+
+<h2 class="sr-only">Jane file inventory with branch column — 19 files safe for main, 2 must stay on develop</h2>
+<style>
+.inv { font-family: var(--font-sans); padding: 0.5rem 0 2rem; }
+.section-hdr {
+  font-size: 11px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--color-text-secondary); margin: 1.5rem 0 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-hdr::after { content:''; flex:1; height:0.5px; background: var(--color-border-tertiary); }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th {
+  text-align: left; font-size: 10px; font-weight: 500; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--color-text-secondary);
+  padding: 6px 8px; border-bottom: 0.5px solid var(--color-border-tertiary);
+}
+td { padding: 7px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--color-background-secondary); }
+.num { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-secondary); width: 24px; }
+.fname { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-primary); white-space: nowrap; }
+.desc { color: var(--color-text-secondary); font-size: 12px; }
+.dest { font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary); }
+.note { font-size: 10px; color: var(--color-text-secondary); margin-top: 2px; }
+.badge {
+  display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 7px;
+  border-radius: 4px; white-space: nowrap;
+}
+.b-replace  { background: #E6F1FB; color: #185FA5; }
+.b-create   { background: #EAF3DE; color: #3B6D11; }
+.b-append   { background: #FAEEDA; color: #854F0B; }
+.b-main     { background: #EAF3DE; color: #3B6D11; }
+.b-group    { background: #FAEEDA; color: #854F0B; }
+.b-develop  { background: #FCEBEB; color: #A32D2D; }
+</style>
+
+<div class="inv">
+
+<div class="section-hdr">Docs — main now · no code, resolves merge conflicts</div>
+<table>
+<tr><th>#</th><th>File</th><th>Description</th><th>Repo destination</th><th>Action</th><th>Branch</th></tr>
+<tr>
+  <td class="num">1</td><td class="fname">CLAUDE.md</td>
+  <td class="desc">Session context, phase, KB structure, rules</td>
+  <td class="dest">/CLAUDE.md</td>
+  <td><span class="badge b-replace">Replace</span></td>
+  <td><span class="badge b-main">Main now</span></td>
+</tr>
+<tr>
+  <td class="num">2</td><td class="fname">README.md</td>
+  <td class="desc">Architecture, file tree, knowledge layers, dev workflow</td>
+  <td class="dest">/README.md</td>
+  <td><span class="badge b-replace">Replace</span></td>
+  <td><span class="badge b-main">Main now</span></td>
+</tr>
+<tr>
+  <td class="num">3</td><td class="fname">PROGRESS.md</td>
+  <td class="desc">Phase 2 done, Phase 3 sprint checklists</td>
+  <td class="dest">/PROGRESS.md</td>
+  <td><span class="badge b-replace">Replace</span></td>
+  <td><span class="badge b-main">Main now</span></td>
+</tr>
+<tr>
+  <td class="num">4</td><td class="fname">DECISIONS.md</td>
+  <td class="desc">24 ADRs including ADR-022/023/024</td>
+  <td class="dest">/DECISIONS.md</td>
+  <td><span class="badge b-replace">Replace</span></td>
+  <td><span class="badge b-main">Main now</span></td>
+</tr>
+</table>
+
+<div class="section-hdr">KB files — main now · current knowledge.ts loads all src/content/ files automatically</div>
+<table>
+<tr><th>#</th><th>File</th><th>Description</th><th>Repo destination</th><th>Action</th><th>Branch</th></tr>
+<tr>
+  <td class="num">5</td><td class="fname">murp_prerequisites.md</td>
+  <td class="desc">Prereq chains, campus constraints, sequencing rules</td>
+  <td class="dest">src/content/</td>
+  <td><span class="badge b-create">New file</span></td>
+  <td><span class="badge b-main">Main now</span></td>
+</tr>
+<tr>
+  <td class="num">6</td><td class="fname">murp_sample_paths.md</td>
+  <td class="desc">5 anonymised composite student profiles</td>
+  <td class="dest">src/content/</td>
+  <td><span class="badge b-create">New file</span></td>
+  <td><span class="badge b-main">Main now</span></td>
+</tr>
+<tr>
+  <td class="num">7</td><td class="fname">murp_deadlines.md</td>
+  <td class="desc">Academic calendar, GA windows, thesis milestones</td>
+  <td class="dest">src/content/</td>
+  <td><span class="badge b-create">New file</span></td>
+  <td><span class="badge b-main">Main now</span></td>
+</tr>
+<tr>
+  <td class="num">8</td><td class="fname">murp_funding.md</td>
+  <td class="desc">GAs, APA/Eisenhower/DDETFP fellowships with amounts and deadlines</td>
+  <td class="dest">src/content/</td>
+  <td><span class="badge b-create">New file</span></td>
+  <td><span class="badge b-main">Main now</span></td>
+</tr>
+</table>
+
+<div class="section-hdr">New inert files — main now · nothing imports them yet, completely safe</div>
+<table>
+<tr><th>#</th><th>File</th><th>Description</th><th>Repo destination</th><th>Action</th><th>Branch</th></tr>
+<tr>
+  <td class="num">9</td><td class="fname">useAcademicAdvisor.ts</td>
+  <td class="desc">Plan state, types, normalizeCourse(), credit metrics</td>
+  <td class="dest">src/hooks/ ← new dir</td>
+  <td><span class="badge b-create">New file</span></td>
+  <td><span class="badge b-main">Main now</span></td>
+</tr>
+<tr>
+  <td class="num">11</td><td class="fname">useStreamingChat.ts</td>
+  <td class="desc">Streaming fetch hook with __BUILDING_PLAN__ detection</td>
+  <td class="dest">src/lib/</td>
+  <td><span class="badge b-create">New file</span></td>
+  <td><span class="badge b-main">Main now</span></td>
+</tr>
+<tr>
+  <td class="num">12</td><td class="fname">StreamingCursor.tsx</td>
+  <td class="desc">Blinking inline cursor for streaming state</td>
+  <td class="dest">src/components/</td>
+  <td><span class="badge b-create">New file</span></td>
+  <td><span class="badge b-main">Main now</span></td>
+</tr>
+</table>
+
+<div class="section-hdr">Component group — main now, commit all 5 together · Message.tsx imports all of them</div>
+<table>
+<tr><th>#</th><th>File</th><th>Description</th><th>Repo destination</th><th>Action</th><th>Branch</th></tr>
+<tr>
+  <td class="num">14</td><td class="fname">DegreePlanCard.tsx</td>
+  <td class="desc">Wrapper: parses DEGREE_PLAN JSON, routes to DesktopGrid or MobileTabs</td>
+  <td class="dest">src/components/</td>
+  <td><span class="badge b-create">New file</span></td>
+  <td><span class="badge b-group">Main — as group</span></td>
+</tr>
+<tr>
+  <td class="num">15</td><td class="fname">DesktopGrid.tsx</td>
+  <td class="desc">4-column semester grid, items-start, 5-col totals</td>
+  <td class="dest">src/components/</td>
+  <td><span class="badge b-create">New file</span></td>
+  <td><span class="badge b-group">Main — as group</span></td>
+</tr>
+<tr>
+  <td class="num">16</td><td class="fname">MobileTabs.tsx</td>
+  <td class="desc">Tabbed semester view for mobile (&lt;640px)</td>
+  <td class="dest">src/components/</td>
+  <td><span class="badge b-create">New file</span></td>
+  <td><span class="badge b-group">Main — as group</span></td>
+</tr>
+<tr>
+  <td class="num">17</td><td class="fname">DegreeAuditCard.tsx</td>
+  <td class="desc">Progress bar + completed vs remaining split</td>
+  <td class="dest">src/components/</td>
+  <td><span class="badge b-create">New file</span></td>
+  <td><span class="badge b-group">Main — as group</span></td>
+</tr>
+<tr>
+  <td class="num">18</td><td class="fname">StructuredCards.tsx</td>
+  <td class="desc">ThesisTopicCard + FundingCard</td>
+  <td class="dest">src/components/</td>
+  <td><span class="badge b-create">New file</span></td>
+  <td><span class="badge b-group">Main — as group</span></td>
+</tr>
+</table>
+
+<div class="section-hdr">Replacements — main now · additive changes only, existing behaviour preserved</div>
+<table>
+<tr><th>#</th><th>File</th><th>Description</th><th>Repo destination</th><th>Action</th><th>Branch</th></tr>
+<tr>
+  <td class="num">19</td><td class="fname">Message.tsx</td>
+  <td class="desc">Adds JSON detection before ReactMarkdown. Prose responses unchanged.</td>
+  <td class="dest">src/components/</td>
+  <td><span class="badge b-replace">Replace</span></td>
+  <td><span class="badge b-group">Main — after group</span></td>
+</tr>
+<tr>
+  <td class="num">20</td><td class="fname">StarterPrompts.tsx</td>
+  <td class="desc">Adds 3 chips to existing 7. Nothing removed.</td>
+  <td class="dest">src/components/</td>
+  <td><span class="badge b-replace">Replace</span></td>
+  <td><span class="badge b-main">Main now</span></td>
+</tr>
+<tr>
+  <td class="num">21</td><td class="fname">globals.css.additions</td>
+  <td class="desc">Appends chip colours + keyframes. Nothing overwritten.</td>
+  <td class="dest">append → src/app/globals.css</td>
+  <td><span class="badge b-append">Append</span></td>
+  <td><span class="badge b-main">Main now</span></td>
+</tr>
+</table>
+
+<div class="section-hdr">Develop only · replace existing working files — test before merging to main</div>
+<table>
+<tr><th>#</th><th>File</th><th>Description</th><th>Repo destination</th><th>Action</th><th>Branch</th></tr>
+<tr>
+  <td class="num">10</td><td class="fname">knowledge.ts</td>
+  <td class="desc">Changes context assembly. Breaks Jane entirely if it has a bug.</td>
+  <td class="dest">src/lib/</td>
+  <td><span class="badge b-replace">Replace</span></td>
+  <td><span class="badge b-develop">Develop only</span></td>
+</tr>
+<tr>
+  <td class="num">13</td><td class="fname">route.ts</td>
+  <td class="desc">Adds streaming. Previous attempt was reverted — test carefully.</td>
+  <td class="dest">src/app/api/chat/</td>
+  <td><span class="badge b-replace">Replace</span></td>
+  <td><span class="badge b-develop">Develop only</span></td>
+</tr>
+</table>
+
+</div>
