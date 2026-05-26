@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Message } from "./Message";                          // named export (was default)
+import Message from "./Message";                          // named export (was default)
 import type { MessageData } from "./Message";                 // type-only import
 import { StarterPrompts } from "./StarterPrompts";
 import { BUILDING_PLAN_SENTINEL } from "@/lib/useStreamingChat"; // sentinel string
