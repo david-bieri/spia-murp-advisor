@@ -1,59 +1,24 @@
-# Jane — VT SPIA MURP Advising Bot
+# Jane — SPIA MURP Academic Advisor
 
-**Status:** Phase 2 complete · Phase 3 beginning
-**Last updated:** 2026-05-23
-**Owner:** David Bieri (bieri@vt.edu), Core Faculty, VT SPIA
-**Live URL:** spia-murp-advisor.vercel.app
+AI advising assistant for Virginia Tech's Master of Urban and Regional Planning
+(MURP) program. Named in the spirit of Jane Jacobs.
 
----
-
-## What This Is
-
-**Jane** is a departmental AI advising assistant for the MURP (Master of Urban
-and Regional Planning) program at Virginia Tech's School of Public and
-International Affairs (SPIA). Named in the spirit of Jane Jacobs.
-
-Students ask Jane about program requirements, course policies, faculty research
-areas, and administrative contacts. She answers factual questions about
-documented policies; she does not make recommendations or enrollment decisions.
-
-Built in phases following the Strangler Fig pattern: the prototype is the system
-skeleton, not a throwaway. Each phase replaces internals without restructuring.
+**Live:** spia-murp-advisor.vercel.app  
+**Stack:** Next.js · TypeScript · Tailwind v4 · Anthropic SDK (`claude-sonnet-4-6`)  
+**Deployment:** Vercel (auto-deploy on push to `main`)
 
 ---
 
-## Current Scope (Phase 2)
+## Branch structure
 
-**Covered:**
-- MURP curriculum: core courses, concentrations, certificates, Plan A/B, dual degrees
-- Full course KB: UAP, GIA, and SPIA courses generated from syllabi via pipeline
-  — campus-specific variants (Blacksburg / Arlington/NCR)
-  — modality-specific variants (In-Person / Hybrid / Online)
-- MURP thesis KB: past thesis research scope, methods, and curriculum connections
-- Thesis evaluation rubric
-- UEPP faculty research areas (for thesis advising)
-- SPIA administrative staff routing (who to contact for what)
-- Student life, internships, funding
-
-**Not yet covered (Phase 3):**
-- MPIA curriculum detail *(first expansion — enrollment risk + CIP misclassification
-  make this a recruitment instrument; see ADR-012)*
-- MPA curriculum detail
-- PGG curriculum detail
-- CPAP curriculum detail
-- Faculty research profiles (individual pages — in queue)
-- Program-level documents (graduation checklist, admissions requirements, funding guide)
-
-**Out of scope (permanent):**
-- Financial aid decisions
-- Individual plan-of-study advice
-- Grade disputes
-- Admissions decisions
-- REAL 2004 and other undergraduate courses *(see ADR-011)*
+| Branch | Purpose | URL |
+|---|---|---|
+| `main` (e841dc5) | Stable — colleague testing | spia-murp-advisor.vercel.app |
+| `develop` | Phase 3 feature work | Vercel preview (auto-generated) |
 
 ---
 
-## Design Principles
+## Design principles
 
 **Accuracy over coverage.** A bot that answers 40 questions correctly is more
 valuable than one that attempts 100 and gets 30 wrong. Scope discipline is the design.
@@ -61,7 +26,8 @@ valuable than one that attempts 100 and gets 30 wrong. Scope discipline is the d
 **Informational, not advisory.** Jane answers factual questions about documented
 policies. She does not recommend concentrations, thesis vs studio, or enrollment
 choices. Restricting to factual questions is also the primary bias mitigation
-strategy — recommendation surfaces are where AI advising tools exhibit demographic bias.
+strategy — recommendation surfaces are where AI advising tools exhibit demographic
+bias.
 
 **Explicit escalation paths.** Every unanswerable question routes to a specific
 human with a specific email. A dead end erodes trust faster than a wrong answer.
@@ -80,6 +46,8 @@ not optional.
 
 ## Architecture
 
+### Data flow
+
 ```
 ┌─────────────────────────────────────────────┐
 │              User Interface                  │
@@ -91,15 +59,17 @@ not optional.
 ┌──────────────────▼──────────────────────────┐
 │         app/api/chat/route.ts                │
 │   buildSystemPrompt(context) + history       │
-│   Calls getContext(query) only               │
+│   detectModeAddendum(query, history)         │
+│   Calls getContext(query, topic?) only       │
 └──────────────────┬──────────────────────────┘
-                   │ getContext(query)
+                   │ getContext(query, topic?)
                    │ → { text, sources }
 ┌──────────────────▼──────────────────────────┐
 │           lib/knowledge.ts                   │
-│  Phase 2: reads all src/content/*.md         │
-│  Phase 3: topic-filtered subset              │
-│  Phase 4+: RAG (when genuinely needed)       │
+│  Layer 1: staff contacts (always loaded)     │
+│  Layer 2: topic-filtered program files       │
+│  Layer 3: course-specific on course# match  │
+│  Layer 4: intent-matched supplementary       │
 └──────────────────┬──────────────────────────┘
                    │
 ┌──────────────────▼──────────────────────────┐
@@ -108,27 +78,70 @@ not optional.
 └─────────────────────────────────────────────┘
 ```
 
-**Critical interface (do not change between phases):**
-```typescript
-getContext(query: string): Promise<{ text: string; sources: string[] }>
+### File structure
+
 ```
+src/
+├── app/
+│   ├── page.tsx                    Root — state management, topic + campus
+│   ├── layout.tsx                  Fonts (Acherus + Crimson Text + DM Mono)
+│   └── api/
+│       ├── chat/route.ts           Chat API — streaming, detectModeAddendum()
+│       └── feedback/route.ts       Feedback stub (Phase 2 completion)
+├── components/
+│   ├── ChatWindow.tsx              Main chat UI, nudges, escalation
+│   ├── Message.tsx                 ReactMarkdown + remark-gfm + JSON detection
+│   ├── Sidebar.tsx                 Campus toggle, 5 topic tabs, quick questions
+│   ├── StarterPrompts.tsx          Starter chips (rounded-full)
+│   ├── StreamingCursor.tsx         Blinking cursor during streaming      [P3]
+│   ├── DegreePlanCard.tsx          Full-width degree map card            [P3]
+│   ├── DesktopGrid.tsx             4-column semester grid (≥640px)       [P3]
+│   ├── MobileTabs.tsx              Tabbed semester view (<640px)         [P3]
+│   ├── DegreeAuditCard.tsx         Progress bar + completion split       [P3]
+│   └── StructuredCards.tsx         ThesisTopicCard + FundingCard         [P3]
+├── hooks/
+│   └── useAcademicAdvisor.ts       Plan state, types, credit metrics     [P3]
+├── lib/
+│   ├── knowledge.ts                getContext(query, topic?) — assembler
+│   ├── system-prompt.ts            buildSystemPrompt(context) — prompt builder
+│   ├── opening-message.ts          Pre-populated opening message
+│   └── useStreamingChat.ts         Streaming fetch hook                  [P3]
+└── content/                        KB .md files — see Knowledge Layers below
+```
+
+`[P3]` = Phase 3 addition (on `develop` branch)
 
 ---
 
-## Knowledge Sources
+## Knowledge layers
 
-| Layer | Content | Source | Status |
-|---|---|---|---|
-| Staff routing | SPIA contact map | Lucidspark JSON | ✅ Live |
-| Program | MURP curriculum, faculty, tuition | spia.vt.edu | ✅ Live |
-| Electives | Cross-dept catalog (69 courses, 9 depts) | Course_Tracking.xlsx | ✅ Live |
-| Jacobs | Jane Jacobs concepts (synthesised) | jacobs_concepts.md | ✅ Live |
-| Pearls | Planning wisdom library (30 pearls) | planning_pearls.md | ✅ Live |
-| Course syllabi | UAP / GIA / SPIA courses | syllabi_to_kb.py pipeline | ✅ Live |
-| MURP theses | Research scope, methods, curriculum links | syllabi_to_kb.py pipeline | ✅ Live |
-| Rubric | Thesis / final project evaluation criteria | syllabi_to_kb.py pipeline | ✅ Live |
-| Faculty profiles | Individual research + advising pages | — | ⬜ Phase 3 |
-| MPIA curriculum | Program content, courses, careers | — | ⬜ Phase 3 |
+**Layer 1 — Staff routing (always loaded)**
+- `spia_staff_contacts.md` — who handles what; fallback for every unanswerable question
+
+**Layer 2 — Program knowledge (loaded by topic)**
+- `murp_curriculum.md` — degree structure, faculty, tuition, 4+1 pathway
+- `murp_course_sequence.md` — official two-year sequence (authoritative, ADR-021)
+- `murp_certificates_detail.md` — certificate requirements
+- `murp_electives.md` — cross-department elective catalog
+- `murp_faqs.md` — common questions (application, GPA, financial aid, graduation)
+- `murp_4plus1.md` — accelerated 5-year program
+- `murp_faculty_research.md` — faculty research areas and contacts
+- `murp_student_life.md` — student orgs, internships, travel
+- `jacobs_concepts.md` — Jane Jacobs ideas (synthesised)
+- `planning_pearls.md` — 30 planning pearls
+
+**Layer 3 — Course-specific (loaded when course number in query)**
+- `uap5174_blacksburg_bieri_s26.md` — UAP 5174 Blacksburg (Bieri, S26)
+- `uap5174_arlington_cowell_s24.md` — UAP 5174 Arlington (Cowell, S24)
+- `[course]_[campus]_[instructor]_[term].md` — full pipeline KB (80+ files)
+- `thesis_*.md` — MURP thesis examples and methods
+- `murp_rubric_*.md` — evaluation rubrics
+
+**Layer 4 — Phase 3 supplementary (loaded by intent)**
+- `murp_prerequisites.md` — prereq chains, campus constraints, sequencing rules
+- `murp_sample_paths.md` — anonymised composite student paths by focus area
+- `murp_deadlines.md` — academic calendar deadlines, GA application windows
+- `murp_funding.md` — fellowships, GAs, scholarships with amounts and deadlines
 
 **Layer 2 data quality issues (resolve before Phase 3 RAG ingestion):**
 - GEOG 5314 listed twice with different titles — confirm with Geography dept
@@ -137,87 +150,108 @@ getContext(query: string): Promise<{ text: string; sources: string[] }>
 
 ---
 
-## KB Refresh (semester start)
+## Key design decisions
+
+**`getContext()` interface (ADR-001/010):**
+`getContext(query, topic?) → { text: string, sources: string[] }` is the phase
+boundary contract. Never change the return type.
+
+**Mode detection (ADR-023):**
+`detectModeAddendum(query, history)` in `route.ts` appends structured JSON schemas to
+the system prompt for DEGREE_PLAN and DEGREE_AUDIT modes. Mode detection is a chat-layer
+concern, not a knowledge-layer concern.
+
+**Card rendering tiers (ADR-024):**
+- Full-width card: DEGREE_PLAN, DEGREE_AUDIT (break out of chat bubble)
+- Light card: FUNDING_MATCHES, THESIS_SUGGESTIONS (inside bubble, left-border accent)
+- Prose: conflict checker, deadlines, sample paths (normal ReactMarkdown)
+
+**Mobile-first layout:**
+DegreePlanCard renders `<MobileTabs>` below 640px (one semester at a time) and
+`<DesktopGrid>` at 640px and above. No horizontal scroll.
+
+**Streaming-to-card transition:**
+While structured output is generating, `useStreamingChat.ts` detects
+`content.trimStart().startsWith('{"type":"DEGREE')` and shows a "Building your
+plan…" placeholder. Card renders when `[DONE]` fires and `tryParseStructured()`
+succeeds.
+
+---
+
+## Course type colour system (VT extended palette)
+
+| Type | Background | Text | VT colour name |
+|---|---|---|---|
+| Core required | `#F5EEF1` | `#861F41` | Maroon tint |
+| Elective | `#F5F3F0` | `#75787B` | Hokie Stone tint |
+| Certificate | `#FEF3EC` | `#CF4520` | Burnt Orange tint |
+| Thesis/capstone | `#EBF5EF` | `#009B77` | Forest tint |
+
+---
+
+## Dev workflow
 
 ```powershell
+# Dev server (WSL or Windows)
+npm run dev
+
+# Deploy (push to main = production; push to develop = preview)
+git add . && git commit -m "feat: ..." && git push
+
+# Tests
+npx playwright test
+npx playwright test --grep "Load and opening|Nudges"
+cmd /c "npx playwright show-report"
+
+# Repo integrity check
+powershell -ExecutionPolicy Bypass -File .\check_repo.ps1   # expected: 69/0
+
+# Pre-deploy static check
+python dev/pre_deploy_check.py
+
+# KB refresh (semester start)
 # 1. Run pipeline on updated syllabi folder
-python dev\syllabi_to_kb.py `
+python dev/syllabi_to_kb.py `
   --folder "C:\path\to\syllabi" `
   --out "C:\path\to\kb_output" `
   --prefix UAP GIA SPIA `
   --thesis-folder "MURP thesis"
-
-# 2. Review output files, check kb_results.csv for failures
-
+# 2. Review output — check kb_results.csv for failures before copying
 # 3. Copy to repo
 Copy-Item "C:\path\to\kb_output\*.md" "src\content\"
-
 # 4. Commit and deploy
 git add src/content/
 git commit -m "content: semester refresh [term]"
 git push
+
+# Word count audit
+Get-ChildItem src\content -Filter *.md | Get-Content | Measure-Object -Word
 ```
+
+**Office computer constraint:** No npm available. Add dependencies to `package.json`
+manually; Vercel installs on build.
 
 ---
 
-## Phase Roadmap
+## Phase history
 
-| Phase | Description | Status |
+| Phase | Scope | Status |
 |---|---|---|
-| 1 | React artifact prototype, hardcoded knowledge | ✅ Complete |
-| 2 | Hosted Next.js app on Vercel, full course KB, Jane persona | ✅ Complete |
-| 3 | Topic filtering, faculty profiles, MPIA expansion | 🔄 In progress |
-| 4 | Department-wide scope, VT CAS authentication | ⬜ Planned |
-| 5 | Production hardening, logging, governance | ⬜ Planned |
+| 1 | Prototype: basic chat, single KB file, no persona | Complete |
+| 2 | Hosted app, full course KB, Jane persona, Playwright suite | Complete |
+| 3 | Topic filtering, structured output, degree map, audit | In progress |
+| 4 | MPIA expansion, drag-and-drop plan editing, feedback backend | Planned |
+| 5 | VT CAS authentication | Planned |
 
 ---
 
-## File Structure
+## People
 
-```
-spia-murp-advisor/
-├── README.md
-├── DECISIONS.md              18 ADRs
-├── PROGRESS.md               Phase checklists
-├── CLAUDE.md                 Claude Code session context (auto-loaded)
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx        Page title: "Jane — MURP Advising, VT SPIA"
-│   │   ├── page.tsx          Root — state, handleSend, OPENING_MESSAGE init
-│   │   └── api/chat/
-│   │       └── route.ts      Server-side API handler
-│   ├── components/
-│   │   ├── ChatWindow.tsx    Chat UI, scopeLabel, campus nudge
-│   │   ├── Sidebar.tsx       Campus toggle + 5 topic tabs (2 rows)
-│   │   ├── Message.tsx       Message bubble component
-│   │   └── StarterPrompts.tsx 6 clickable starter chips
-│   ├── lib/
-│   │   ├── knowledge.ts      getContext() — loads src/content/*.md
-│   │   ├── system-prompt.ts  buildSystemPrompt(context) — Jane's full prompt
-│   │   └── opening-message.ts OPENING_MESSAGE constant
-│   └── content/              KB source documents (.md)
-│       ├── spia_staff_contacts.md
-│       ├── murp_*.md         Program-level knowledge
-│       ├── jacobs_concepts.md
-│       ├── planning_pearls.md
-│       ├── [course]_[campus]_[modality]_[instructor]_[term].md
-│       ├── thesis_[author]_[year].md
-│       └── murp_rubric_*.md
-└── dev/
-    └── syllabi_to_kb.py      PDF → .md pipeline (syllabi + theses + rubrics)
-```
-
----
-
-## Quick Reference: Key Contacts
-
-| Role | Person | Email |
+| Person | Role | Contact |
 |---|---|---|
-| Admissions (all programs) | Tyler Wiltshire | wilt15@vt.edu |
-| Grad assistantships | Kelly Crist | kcrist@vt.edu |
-| Arlington campus admin | Elia Amegashie | elia@vt.edu |
-| Travel & purchasing | Shelley Adkins | sladkins@vt.edu |
-| Budget, grants, compliance | Erin Thompson | elcline@vt.edu |
-| Undergrad advising | Chris LaPlante | chrisl@vt.edu |
-| UEPP Chair | Todd Schenk | tschenk@vt.edu |
-| Project owner | David Bieri | bieri@vt.edu |
+| David Bieri | Owner, Core Faculty SPIA | bieri@vt.edu |
+| Todd Schenk | First tester, MURP advisor | tschenk@vt.edu |
+| Dara Wald | First tester, UAP faculty | — |
+| Kelly Crist | Graduate assistantships | kcrist@vt.edu |
+| Tyler Wiltshire | Admissions | wiltshire@vt.edu |
+| Shelley Adkins | Travel reimbursement | sladkins@vt.edu |
