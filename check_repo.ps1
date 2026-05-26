@@ -116,5 +116,23 @@ Write-Host "`n=== playwright.config.js ===" -ForegroundColor Cyan
 Check "playwright.config.js" "testDir"  "config present"
 Check "playwright.config.js" "BASE_URL" "base url env var"
 
+Write-Host "`n=== test count (jane.spec.ts) ===" -ForegroundColor Cyan
+$specPath      = Join-Path $root "test\jane.spec.ts"
+$expectedTests = 37
+if (-not (Test-Path $specPath)) {
+    Write-Host "  [MISSING FILE] test\jane.spec.ts" -ForegroundColor Red
+    $fail++
+} else {
+    $specRaw   = Get-Content $specPath -Raw -Encoding UTF8
+    $testCount = ([regex]::Matches($specRaw, '(?m)^[ \t]*test\(')).Count
+    if ($testCount -eq $expectedTests) {
+        Write-Host "  [OK] jane.spec.ts test count = $expectedTests" -ForegroundColor Green
+        $pass++
+    } else {
+        Write-Host "  [!!] jane.spec.ts test count = $testCount (expected $expectedTests)" -ForegroundColor Red
+        $fail++
+    }
+}
+
 Write-Host "`n========================================"
 Write-Host "PASSED: $pass  FAILED: $fail" -ForegroundColor $(if ($fail -eq 0) { "Green" } else { "Yellow" })
