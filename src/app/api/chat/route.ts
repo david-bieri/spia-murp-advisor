@@ -189,7 +189,7 @@ export async function POST(req: Request) {
   const lastUserQuery =
     [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
 
-  const { text: contextText } = await getContext(lastUserQuery, topic);
+  const { text: contextText, sources } = await getContext(lastUserQuery, topic);
 
   const modeAddendum = detectModeAddendum(lastUserQuery, messages);
   const campusNote   = campus
@@ -228,6 +228,11 @@ export async function POST(req: Request) {
         }
       }
 
+      await writer.write(
+        encoder.encode(
+          `data: ${JSON.stringify({ sources })}\n\n`
+        )
+      );
       await writer.write(encoder.encode("data: [DONE]\n\n"));
     } catch (err) {
       const message =

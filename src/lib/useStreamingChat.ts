@@ -10,6 +10,7 @@ import { useState, useCallback, useRef } from 'react';
 export type Message = {
   role: 'user' | 'assistant';
   content: string;
+  sources?: string[];   // KB files used — attached at stream completion
   clientOnly?: boolean;
 };
 
@@ -67,6 +68,7 @@ export function useStreamingChat({ topic, campus }: Options) {
         const decoder = new TextDecoder();
         let buffer      = '';
         let accumulated = '';
+        let sourcesData: string[] = [];
 
         while (true) {
           const { done, value } = await reader.read();
@@ -89,6 +91,8 @@ export function useStreamingChat({ topic, campus }: Options) {
                 accumulated += '\n\n_(Jane encountered an error. Please try again.)_';
               } else if (parsed.text) {
                 accumulated += parsed.text;
+              } else if (parsed.sources) {
+                sourcesData = parsed.sources;
               }
 
               // Detect structured output accumulating — show sentinel instead of raw JSON
@@ -106,10 +110,14 @@ export function useStreamingChat({ topic, campus }: Options) {
           }
         }
 
-        // Stream complete — set final content (JSON or prose)
+        // Stream complete — set final content with sources
         setMessages((prev) => {
           const next = [...prev];
-          next[next.length - 1] = { role: 'assistant', content: accumulated };
+          next[next.length - 1] = {
+            role: 'assistant',
+            content: accumulated,
+            ...(sourcesData.length > 0 && { sources: sourcesData }),
+          };
           return next;
         });
       } catch (err: unknown) {
