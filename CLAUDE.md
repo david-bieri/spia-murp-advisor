@@ -27,9 +27,19 @@ skeleton, not a throwaway. Each phase replaces internals without restructuring.
 
 ## Read These Files Before Doing Anything
 
+**At session start, always:**
+0. `SESSION_NOTES.md` — live in-flight state from the previous session (pending deploys per branch, open questions, latent bugs, test status). **Read this BEFORE doing anything else, even before asking the user what they want.** If it's missing, fall through to file 1.
+
+**Project context (slow-changing reference):**
 1. `README.md` — architecture, current scope, knowledge layers, file structure
 2. `PROGRESS.md` — what's done, what's next, what's blocked, phase checklists
-3. `DECISIONS.md` — only if you face an architecture question (24 ADRs)
+3. `DECISIONS.md` — only if you face an architecture question (26 ADRs)
+
+**Cross-cutting protocols (consult when relevant):**
+4. `BRANCHING.md` — before any git commit or push decision (main vs develop)
+5. `TESTING.md` — before pushing to `main` (pre-deploy checks)
+6. `AGENTS.md` — before writing any Next.js code (custom version with breaking changes)
+7. `HANDOVER.md` — at session end when David says "handover", "wrap up", "switching chats", or hits a Sprint/Phase milestone — regenerate `SESSION_NOTES.md` per the protocol there
 
 After reading, summarise your understanding of current status and proposed
 next steps. Wait for confirmation before writing any code.
@@ -51,13 +61,15 @@ Jane's personality, streaming, and the revised topic sidebar.
 > Do not share the URL with students until both are done.
 
 **Active Phase 3 priorities (on `develop`):**
-1. Sprint 1: New KB files (murp_prerequisites, murp_sample_paths,
-   murp_deadlines, murp_funding)
-2. Sprint 2: `getContext(query, topic?)` topic filtering + `useAcademicAdvisor`
-   hook
-3. Sprint 3: Streaming + structured output (DegreePlanCard, DegreeAuditCard,
-   MobileTabs, DesktopGrid, detectModeAddendum in route.ts)
-4. Sprint 4: ThesisTopicCard, FundingCard, Playwright tests
+1. Sprint 1: New KB files — 3 of 5 done (`murp_prerequisites`, `murp_deadlines`,
+   `murp_timetable_f26` ✓); **pending: `murp_sample_paths`, `murp_funding`**
+2. Sprint 2: `getContext(query, topic?)` topic filtering ✓ + timetable integration ✓;
+   **pending: `useAcademicAdvisor` hook + populate `sources` field**
+3. Sprint 2b: ✓ complete — scheduling features as system-prompt instructions
+   (ADR-026; five features in `## SCHEDULING AND COURSE AVAILABILITY` block)
+4. Sprint 3: Streaming + structured output (`DegreePlanCard`, `DegreeAuditCard`,
+   `MobileTabs`, `DesktopGrid`, `detectModeAddendum` in route.ts) — not started
+5. Sprint 4: `ThesisTopicCard`, `FundingCard`, Playwright tests — not started
 
 See PROGRESS.md for full Phase 3 checklist.
 
@@ -149,10 +161,12 @@ src/content/
 ├── murp_rubric_*.md                Thesis/project evaluation rubrics
 │
 │   ── Phase 3 additions (src/content/) ──
-├── murp_prerequisites.md           Prereq chains, campus constraints (NEW)
-├── murp_sample_paths.md            Anonymised composite student paths (NEW)
-├── murp_deadlines.md               Academic calendar deadlines (NEW)
-└── murp_funding.md                 Fellowships, GAs, scholarships (NEW)
+├── murp_prerequisites.md           Prereq chains, campus constraints (✓ shipped)
+├── murp_deadlines.md               Academic calendar deadlines (✓ shipped)
+├── murp_timetable_f26.md           VT Banner timetable, Fall 2026 (✓ shipped; ADR-025)
+│                                   Refreshed each semester via vt_timetable_scraper.py
+├── murp_sample_paths.md            Anonymised composite student paths (pending)
+└── murp_funding.md                 Fellowships, GAs, scholarships (pending)
 ```
 
 **Syllabi pipeline:** `dev/syllabi_to_kb.py`
